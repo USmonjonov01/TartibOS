@@ -15,7 +15,7 @@ import {
 import { useUser } from "../../context/users";
 import { useNotifications } from "../../context/notifications";
 import { Shell, Aside, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty,} from "./style";
-
+import TartibOSLogo from "../../assets/icons/TartibOS1.png"
 const mainNav = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/missions", label: "Missions", icon: Target },
@@ -79,7 +79,7 @@ function Sidebar() {
                 <LogoBlock>
                     <LogoRow>
                         <LogoIcon>
-                            <span>T</span>
+                            <img width="100%" style={{overflow: "hidden", borderRadius: "8px"}} src={TartibOSLogo} alt="TartibOS" />
                         </LogoIcon>
                         <LogoTextBlock>
                             <LogoTitle>TartibOS</LogoTitle>

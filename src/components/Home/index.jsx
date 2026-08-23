@@ -67,6 +67,8 @@ import {
     Footer,
     colors,
 } from "./style";
+import TartibOSLogo from "../../assets/icons/TartibOS1.png"
+
 
 const features = [
     {
@@ -137,7 +139,7 @@ const Home = () => {
                 <NavInner>
                     <LogoBox>
                         <LogoIcon>
-                            <span>T</span>
+                            <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
                         </LogoIcon>
                         <LogoText>TartibOS</LogoText>
                     </LogoBox>
@@ -173,9 +175,6 @@ const Home = () => {
                         <BtnPrimaryLg onClick={() => navigate("/sign-up")}>
                             Bepul boshlash <ArrowRight size={18} />
                         </BtnPrimaryLg>
-                        <BtnSecondaryLg onClick={() => navigate("/dashboard")}>
-                            Demo ko'rish →
-                        </BtnSecondaryLg>
                     </HeroActions>
                 </HeroInner>
 
@@ -194,7 +193,7 @@ const Home = () => {
                         <MiniSidebar>
                             <MiniLogoRow>
                                 <MiniLogoIcon>
-                                    <span>T</span>
+                                         <img width="100%" style={{ overflow: "hidden", borderRadius: "4px" }} src={TartibOSLogo} alt="TartibOS" />
                                 </MiniLogoIcon>
                                 <MiniLogoText>TartibOS</MiniLogoText>
                             </MiniLogoRow>

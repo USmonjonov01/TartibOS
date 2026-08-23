@@ -25,6 +25,8 @@ import {
     BackButton,
 } from "./style";
 import { useUser } from "../../../context/users";
+import TartibOSLogo from "../../../assets/icons/TartibOS1.png"
+
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -69,7 +71,7 @@ const SignUp = () => {
                 <Header>
                     <LogoRow>
                         <LogoIcon>
-                            <span>T</span>
+                            <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
                         </LogoIcon>
                         <LogoText>TartibOS</LogoText>
                     </LogoRow>
