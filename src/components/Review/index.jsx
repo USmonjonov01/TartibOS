@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, RotateCcw, NotebookPen } from "lucide-react";
+import { CheckCircle2, RotateCcw, NotebookPen, CalendarDays, CalendarRange } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { dailyReviewApi, missionApi } from "../../axios";
-import { filterByOwner } from "../../utils/ownership";
 import { dedupeRoutines } from "../../utils/routine";
 import { getDateStr, getISOWeekId } from "../../utils/date";
 import { getWeekAvgPct, getMissionStatsForWeek, getHabitRates } from "../../utils/stats";
@@ -41,6 +40,22 @@ import {
     ActionsRow,
     SaveButton,
     ClearButton,
+    HistorySection,
+    HistorySectionTitle,
+    HistoryGrid,
+    HistoryCard,
+    HistoryCardHead,
+    HistoryCardTitle,
+    HistoryCardCount,
+    HistoryList,
+    HistoryEmpty,
+    HistoryEntry,
+    HistoryEntryHead,
+    HistoryEntryDate,
+    HistoryEntryScores,
+    HistoryScorePill,
+    HistoryEntryText,
+    HistoryEntryLabel,
     colors,
 } from "./style";
 
@@ -277,20 +292,41 @@ const Review = () => {
         try {
             const payload = mode === "daily"
                 ? {
+                      mode: "daily",
                       date: todayStr,
-                      win: daily.achievement || null,
+                      achievement: daily.achievement || null,
                       mistake: daily.mistake || null,
                       summary: daily.summary || null,
-                      tomorrow: daily.nextFocus || null,
+                      nextFocus: daily.nextFocus || null,
+                      discipline: daily.discipline || 0,
+                      execution: daily.execution || 0,
                   }
                 : {
+                      mode: "weekly",
                       date: todayStr,
-                      summary: weekly.reflection || null,
+                      weekId: currentWeekId,
+                      discipline: weekly.discipline || 0,
+                      execution: weekly.execution || 0,
+                      missionRate: weekly.missionRate || 0,
+                      habitConsistency: weekly.habitConsistency || 0,
+                      reflection: weekly.reflection || null,
                   };
 
             const { data } = await dailyReviewApi.post("/reviews", payload);
             const created = data.review || data;
-            setReviews((prev) => [...prev, created]);
+            setReviews((prev) => {
+                const idx = prev.findIndex((r) =>
+                    mode === "daily"
+                        ? r.mode === "daily" && r.date === todayStr
+                        : r.mode === "weekly" && r.weekId === currentWeekId
+                );
+                if (idx >= 0) {
+                    const next = [...prev];
+                    next[idx] = created;
+                    return next;
+                }
+                return [...prev, created];
+            });
 
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
@@ -314,6 +350,24 @@ const Review = () => {
 
     const anyError = loadError || saveError;
     const initialLoading = loading && reviews.length === 0;
+
+    // Pastdagi ikkita tarix bloki uchun — kunlik va haftalik review'lar alohida,
+    // eng so'nggisi tepada.
+    const dailyReviews = useMemo(
+        () => reviews.filter((r) => r.mode === "daily").sort((a, b) => (b.date || "").localeCompare(a.date || "")),
+        [reviews]
+    );
+    const weeklyReviews = useMemo(
+        () => reviews.filter((r) => r.mode === "weekly").sort((a, b) => (b.weekId || "").localeCompare(a.weekId || "")),
+        [reviews]
+    );
+
+    const formatEntryDate = (dateStr) => {
+        if (!dateStr) return "—";
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString("uz-UZ", { day: "numeric", month: "long" });
+    };
 
     return (
         <Wrapper>
@@ -470,6 +524,89 @@ const Review = () => {
                         <RotateCcw size={14} /> Tozalash
                     </ClearButton>
                 </ActionsRow>
+
+                <HistorySection>
+                    <HistorySectionTitle>Review tarixi</HistorySectionTitle>
+                    <HistoryGrid>
+                        <HistoryCard>
+                            <HistoryCardHead>
+                                <HistoryCardTitle>
+                                    <CalendarRange size={14} /> Haftalik
+                                </HistoryCardTitle>
+                                <HistoryCardCount>{weeklyReviews.length}</HistoryCardCount>
+                            </HistoryCardHead>
+                            <HistoryList>
+                                {weeklyReviews.length === 0 ? (
+                                    <HistoryEmpty>Hali haftalik review saqlanmagan</HistoryEmpty>
+                                ) : (
+                                    weeklyReviews.map((r) => (
+                                        <HistoryEntry key={r.id}>
+                                            <HistoryEntryHead>
+                                                <HistoryEntryDate>{r.weekId || "—"}</HistoryEntryDate>
+                                                <HistoryEntryScores>
+                                                    {r.discipline > 0 && (
+                                                        <HistoryScorePill $bg={colors.amberSoft} $color={colors.amber}>
+                                                            I {r.discipline}
+                                                        </HistoryScorePill>
+                                                    )}
+                                                    {r.execution > 0 && (
+                                                        <HistoryScorePill $bg={colors.successSoft} $color={colors.success}>
+                                                            B {r.execution}
+                                                        </HistoryScorePill>
+                                                    )}
+                                                </HistoryEntryScores>
+                                            </HistoryEntryHead>
+                                            {r.reflection ? (
+                                                <HistoryEntryText>{r.reflection}</HistoryEntryText>
+                                            ) : (
+                                                <HistoryEntryLabel>Matn yo'q</HistoryEntryLabel>
+                                            )}
+                                        </HistoryEntry>
+                                    ))
+                                )}
+                            </HistoryList>
+                        </HistoryCard>
+
+                        <HistoryCard>
+                            <HistoryCardHead>
+                                <HistoryCardTitle>
+                                    <CalendarDays size={14} /> Kunlik
+                                </HistoryCardTitle>
+                                <HistoryCardCount>{dailyReviews.length}</HistoryCardCount>
+                            </HistoryCardHead>
+                            <HistoryList>
+                                {dailyReviews.length === 0 ? (
+                                    <HistoryEmpty>Hali kunlik review saqlanmagan</HistoryEmpty>
+                                ) : (
+                                    dailyReviews.map((r) => (
+                                        <HistoryEntry key={r.id}>
+                                            <HistoryEntryHead>
+                                                <HistoryEntryDate>{formatEntryDate(r.date)}</HistoryEntryDate>
+                                                <HistoryEntryScores>
+                                                    {r.discipline > 0 && (
+                                                        <HistoryScorePill $bg={colors.amberSoft} $color={colors.amber}>
+                                                            I {r.discipline}
+                                                        </HistoryScorePill>
+                                                    )}
+                                                    {r.execution > 0 && (
+                                                        <HistoryScorePill $bg={colors.successSoft} $color={colors.success}>
+                                                            B {r.execution}
+                                                        </HistoryScorePill>
+                                                    )}
+                                                </HistoryEntryScores>
+                                            </HistoryEntryHead>
+                                            {r.achievement || r.summary ? (
+                                                <HistoryEntryText>{r.achievement || r.summary}</HistoryEntryText>
+                                            ) : (
+                                                <HistoryEntryLabel>Matn yo'q</HistoryEntryLabel>
+                                            )}
+                                        </HistoryEntry>
+                                    ))
+                                )}
+                            </HistoryList>
+                        </HistoryCard>
+                    </HistoryGrid>
+                </HistorySection>
             </Inner>
         </Wrapper>
     );

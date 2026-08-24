@@ -345,3 +345,145 @@ export const ClearButton = styled.button`
         color: ${colors.textSecondary};
     }
 `;
+
+/* ---------- Tarix (History) bo'limi — ikkita ixcham skroll-wrapper ---------- */
+
+export const HistorySection = styled.div`
+    margin-top: 40px;
+`;
+
+export const HistorySectionTitle = styled.h2`
+    font-family: ${font.display};
+    font-size: 17px;
+    font-weight: 700;
+    color: ${colors.textPrimary};
+    margin: 0 0 14px;
+`;
+
+export const HistoryGrid = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+export const HistoryCard = styled.div`
+    background: ${colors.surface};
+    border: 1px solid ${colors.hairline};
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+`;
+
+export const HistoryCardHead = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+`;
+
+export const HistoryCardTitle = styled.h3`
+    font-family: ${font.display};
+    font-size: 13.5px;
+    font-weight: 700;
+    color: ${colors.textPrimary};
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+`;
+
+export const HistoryCardCount = styled.span`
+    font-family: ${font.mono};
+    font-size: 11px;
+    color: ${colors.textMuted};
+    background: ${colors.surfaceRaised};
+    padding: 2px 8px;
+    border-radius: 10px;
+`;
+
+// Talab qilingan tarzda: overflow: scroll, ixcham va sobit balandlikda —
+// tarix uzaysa ham kartochka o'lchami o'zgarmaydi, ichida aylanadi.
+export const HistoryList = styled.div`
+    max-height: 320px;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: ${colors.hairline};
+        border-radius: 3px;
+    }
+`;
+
+export const HistoryEmpty = styled.div`
+    font-size: 12.5px;
+    color: ${colors.textMuted};
+    padding: 16px 4px;
+    text-align: center;
+`;
+
+export const HistoryEntry = styled.div`
+    background: ${colors.surfaceRaised};
+    border: 1px solid ${colors.hairlineSoft};
+    border-radius: 10px;
+    padding: 10px 12px;
+`;
+
+export const HistoryEntryHead = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+`;
+
+export const HistoryEntryDate = styled.span`
+    font-family: ${font.mono};
+    font-size: 11.5px;
+    font-weight: 600;
+    color: ${colors.textSecondary};
+`;
+
+export const HistoryEntryScores = styled.div`
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+`;
+
+export const HistoryScorePill = styled.span`
+    font-family: ${font.mono};
+    font-size: 10px;
+    font-weight: 700;
+    color: ${(p) => p.$color};
+    background: ${(p) => p.$bg};
+    padding: 1px 6px;
+    border-radius: 8px;
+`;
+
+export const HistoryEntryText = styled.p`
+    font-size: 12.5px;
+    color: ${colors.textPrimary};
+    line-height: 1.55;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+`;
+
+export const HistoryEntryLabel = styled.span`
+    font-size: 11px;
+    font-weight: 600;
+    color: ${colors.textMuted};
+`;

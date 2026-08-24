@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
     CheckCircle2,
     Circle,
+    XCircle,
+    AlertCircle,
     Clock,
     ArrowRight,
     TrendingUp,
@@ -14,7 +16,6 @@ import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { useNotifications } from "../../context/notifications";
 import { missionApi } from "../../axios";
-import { filterByOwner } from "../../utils/ownership";
 import { getTodayHabits, dedupeRoutines, habitKey } from "../../utils/routine";
 import { DAY_ORDER, DAY_LABELS_UZ, getDayKey, getDateStr, getISOWeekId } from "../../utils/date";
 import {
@@ -70,6 +71,16 @@ import {
     InsightLink,
     StatusText,
     ErrorBanner,
+    HabitLegendRow,
+    HabitLegendItem,
+    HabitLegendDot,
+    ModalOverlay,
+    ModalBox,
+    ModalTitle,
+    ModalSubtitle,
+    ModalTextarea,
+    ModalActions,
+    ModalBtn,
     colors,
 } from "./style";
 
@@ -81,6 +92,22 @@ const PRIORITY_COLORS = {
 
 const priorityColor = (priority) => PRIORITY_COLORS[priority] || colors.textSubtle;
 
+// Holat tsikli: null -> "done" -> "missed" -> "excused" -> null
+// (History sahifasi bilan bir xil mantiq — bitta joyda ikkita xil qoida bo'lmasin)
+const nextHabitState = (current) => {
+    if (!current) return "done";
+    if (current === "done") return "missed";
+    if (current === "missed") return "excused";
+    return null;
+};
+
+const habitStateIcon = (state) => {
+    if (state === "done") return <CheckCircle2 size={20} color={colors.success} strokeWidth={2} />;
+    if (state === "missed") return <XCircle size={20} color={colors.danger} strokeWidth={2} />;
+    if (state === "excused") return <AlertCircle size={20} color={colors.warning} strokeWidth={2} />;
+    return <Circle size={20} color={colors.textSubtle} strokeWidth={2} />;
+};
+
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useUser();
@@ -91,8 +118,10 @@ const Dashboard = () => {
     const [missions, setMissions] = useState([]);
     const [missionsLoading, setMissionsLoading] = useState(false);
     const [missionsError, setMissionsError] = useState(null);
-    const [completedHabitIds, setCompletedHabitIds] = useState(() => new Set());
     const [habitSyncError, setHabitSyncError] = useState(null);
+    const [pendingHabitKey, setPendingHabitKey] = useState(null);
+    const [reasonModal, setReasonModal] = useState(null); // { habit }
+    const [reasonText, setReasonText] = useState("");
 
     const fetchMissions = useCallback(async () => {
         if (!user) return;
@@ -136,17 +165,6 @@ const Dashboard = () => {
         [weeks, currentWeekId]
     );
 
-    // Bugungi bajarilgan odatlar ro'yxati serverdan (weeks.completions) o'qiladi —
-    // shu sabab sahifa yangilansa ham (refresh) holat saqlanib qoladi. Optimistik
-    // lokal o'zgarishlarga (toggleHabit) yo'l qo'yish uchun bu render vaqtida
-    // moslashtiriladi, effect ichida emas.
-    const serverHabitIds = currentWeek?.completions?.[todayKey];
-    const [syncedServerIds, setSyncedServerIds] = useState(serverHabitIds);
-    if (serverHabitIds !== syncedServerIds) {
-        setSyncedServerIds(serverHabitIds);
-        setCompletedHabitIds(new Set(serverHabitIds || []));
-    }
-
     // Ketma-ket bosishlarda ikki marta yangi hafta yozuvi yaratilib qolmasligi
     // uchun so'rovlarni navbatga qo'yamiz va har doim eng so'nggi week holatidan foydalanamiz.
     const currentWeekRef = useRef(currentWeek);
@@ -155,36 +173,100 @@ const Dashboard = () => {
     }, [currentWeek]);
     const saveQueueRef = useRef(Promise.resolve());
 
-    const completedHabits = todayHabits.filter((h) => completedHabitIds.has(habitKey(h))).length;
+    // MUHIM: holat optimistik lokal Set orqali emas, TO'G'RIDAN-TO'G'RI serverdagi
+    // currentWeek'dan hisoblanadi (History sahifasi bilan bir xil mantiq). Avval
+    // bu yerda faqat "bajarildi/bajarilmadi" ikkita holat bo'lgan, endi "sababli
+    // bajarilmadi" ham qo'shildi — uchta alohida ma'lumot manbai (Set + reason)
+    // orasida nomuvofiqlik chiqmasligi uchun eng ishonchli yo'l — bitta joydan
+    // (server) o'qish.
+    const getHabitState = useCallback(
+        (habit) => {
+            const key = habitKey(habit);
+            const completions = currentWeek?.completions?.[todayKey] || [];
+            if (completions.includes(key)) return "done";
+
+            const entry = currentWeek?.reasons?.[todayKey]?.[key];
+            const status = typeof entry === "string" ? entry : entry?.status;
+            if (status === "excused") return "excused";
+            if (status === "missed") return "missed";
+
+            return null;
+        },
+        [currentWeek, todayKey]
+    );
+
+    const completedHabits = todayHabits.filter((h) => getHabitState(h) === "done").length;
     const disciplineScore = todayHabits.length > 0
         ? Math.round((completedHabits / todayHabits.length) * 100)
         : 0;
 
-    const toggleHabit = (habit) => {
-        const key = habitKey(habit);
-        setHabitSyncError(null);
-        const previous = completedHabitIds;
-        const next = new Set(previous);
-        if (next.has(key)) next.delete(key);
-        else next.add(key);
-        setCompletedHabitIds(next);
+    const applyHabitStateChange = useCallback(
+        ({ habit, newState, note }) => {
+            const key = habitKey(habit);
+            if (pendingHabitKey) return;
 
-        const habitIds = Array.from(next);
-        const task = () =>
-            saveDayCompletion({
-                week: currentWeekRef.current,
-                weekId: currentWeekId,
-                dayKey: todayKey,
-                habitIds,
-                totalHabits: todayHabits.length,
-            }).catch((err) => {
-                setCompletedHabitIds(previous);
-                setHabitSyncError(
-                    err.response?.data?.message || err.message || "Odat holatini saqlashda xatolik"
-                );
-            });
+            const existing = new Set(currentWeekRef.current?.completions?.[todayKey] || []);
+            if (newState === "done") existing.add(key);
+            else existing.delete(key);
+            const habitIds = Array.from(existing);
 
-        saveQueueRef.current = saveQueueRef.current.then(task, task);
+            const currentReasons = currentWeekRef.current?.reasons || {};
+            const dayReasons = { ...(currentReasons[todayKey] || {}) };
+            if (newState === "missed") {
+                dayReasons[key] = { status: "missed" };
+            } else if (newState === "excused") {
+                dayReasons[key] = { status: "excused", note: note || "" };
+            } else {
+                delete dayReasons[key];
+            }
+            const nextReasons = { ...currentReasons, [todayKey]: dayReasons };
+
+            setHabitSyncError(null);
+            setPendingHabitKey(key);
+
+            const task = () =>
+                saveDayCompletion({
+                    week: currentWeekRef.current,
+                    weekId: currentWeekId,
+                    dayKey: todayKey,
+                    habitIds,
+                    reasons: nextReasons,
+                    totalHabits: todayHabits.length,
+                })
+                    .catch((err) => {
+                        setHabitSyncError(
+                            err.response?.data?.message || err.message || "Odat holatini saqlashda xatolik"
+                        );
+                    })
+                    .finally(() => setPendingHabitKey(null));
+
+            saveQueueRef.current = saveQueueRef.current.then(task, task);
+        },
+        [pendingHabitKey, todayKey, currentWeekId, todayHabits.length, saveDayCompletion]
+    );
+
+    const handleHabitClick = (habit) => {
+        if (pendingHabitKey) return;
+        const current = getHabitState(habit);
+        const next = nextHabitState(current);
+        if (next === "excused") {
+            setReasonModal({ habit });
+            setReasonText("");
+        } else {
+            applyHabitStateChange({ habit, newState: next });
+        }
+    };
+
+    const handleReasonConfirm = () => {
+        if (!reasonModal) return;
+        applyHabitStateChange({ habit: reasonModal.habit, newState: "excused", note: reasonText });
+        setReasonModal(null);
+        setReasonText("");
+    };
+
+    const handleReasonCancel = () => {
+        setReasonModal(null);
+        setReasonText("");
     };
 
     const todayMissions = useMemo(
@@ -239,6 +321,7 @@ const Dashboard = () => {
     const anyError = routineError || weeksError || missionsError || habitSyncError;
 
     return (
+        <>
         <Wrapper>
             <HeaderBlock>
                 <DateLabel>
@@ -326,6 +409,22 @@ const Dashboard = () => {
                                         {completedHabits}/{todayHabits.length}
                                     </CountBadge>
                                 </SectionHeader>
+                                {todayHabits.length > 0 && (
+                                    <HabitLegendRow>
+                                        <HabitLegendItem>
+                                            <HabitLegendDot $bg={colors.successLight} $border={colors.success}>✓</HabitLegendDot>
+                                            Bajarildi
+                                        </HabitLegendItem>
+                                        <HabitLegendItem>
+                                            <HabitLegendDot $bg={colors.dangerLight} $border={colors.danger}>✗</HabitLegendDot>
+                                            Bajarilmadi
+                                        </HabitLegendItem>
+                                        <HabitLegendItem>
+                                            <HabitLegendDot $bg={colors.warningLight} $border={colors.warning}>!</HabitLegendDot>
+                                            Sababli
+                                        </HabitLegendItem>
+                                    </HabitLegendRow>
+                                )}
                                 <SectionBody>
                                     {todayHabits.length === 0 ? (
                                         <EmptyState>
@@ -335,17 +434,20 @@ const Dashboard = () => {
                                         </EmptyState>
                                     ) : (
                                         todayHabits.map((habit) => {
-                                            const done = completedHabitIds.has(habitKey(habit));
+                                            const state = getHabitState(habit);
+                                            const isPending = pendingHabitKey === habitKey(habit);
                                             return (
-                                                <Row key={habit.id} $done={done} onClick={() => toggleHabit(habit)}>
-                                                    {done ? (
-                                                        <CheckCircle2 size={20} color={colors.success} strokeWidth={2} />
-                                                    ) : (
-                                                        <Circle size={20} color={colors.textSubtle} strokeWidth={2} />
-                                                    )}
+                                                <Row
+                                                    key={habit.id}
+                                                    $done={state !== null}
+                                                    $dim={state === "done" ? 0.65 : 0.8}
+                                                    onClick={() => handleHabitClick(habit)}
+                                                    style={isPending ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+                                                >
+                                                    {habitStateIcon(state)}
                                                     <RowEmoji>{habit.icon || "🕒"}</RowEmoji>
                                                     <RowBody>
-                                                        <RowTitle $done={done}>{habit.title}</RowTitle>
+                                                        <RowTitle $done={state === "done"}>{habit.title}</RowTitle>
                                                     </RowBody>
                                                     <RowMeta>
                                                         {habit.priority && <PriorityDot $color={priorityColor(habit.priority)} />}
@@ -460,6 +562,33 @@ const Dashboard = () => {
                 </>
             )}
         </Wrapper>
+
+        {reasonModal && (
+            <ModalOverlay onClick={handleReasonCancel}>
+                <ModalBox onClick={(e) => e.stopPropagation()}>
+                    <ModalTitle>⚠️ Sababli bajarilmadi</ModalTitle>
+                    <ModalSubtitle>
+                        <strong>{reasonModal.habit.title}</strong> odati bajarilmaganining
+                        sababini izohlang (ixtiyoriy).
+                    </ModalSubtitle>
+                    <ModalTextarea
+                        autoFocus
+                        placeholder="Masalan: Kasallik tufayli, ish ko'pligi, kutilmagan holat..."
+                        value={reasonText}
+                        onChange={(e) => setReasonText(e.target.value)}
+                    />
+                    <ModalActions>
+                        <ModalBtn type="button" onClick={handleReasonCancel}>
+                            Bekor qilish
+                        </ModalBtn>
+                        <ModalBtn type="button" $primary onClick={handleReasonConfirm}>
+                            Saqlash
+                        </ModalBtn>
+                    </ModalActions>
+                </ModalBox>
+            </ModalOverlay>
+        )}
+        </>
     );
 };
 

@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { tokens } from "../../theme/tokens";
 
 export const colors = {
@@ -13,6 +13,7 @@ export const colors = {
     warning: tokens.colors.amber,
     warningLight: tokens.colors.amberSoft,
     danger: tokens.colors.danger,
+    dangerLight: tokens.colors.dangerSoft,
     text: tokens.colors.textPrimary,
     textMuted: tokens.colors.textSecondary,
     textSubtle: tokens.colors.textMuted,
@@ -434,4 +435,127 @@ export const ErrorBanner = styled.div`
     padding: 12px 16px;
     font-size: 13px;
     margin-bottom: 20px;
+`;
+
+/* ---------- Odat holati legendasi (History bilan bir xil uslub) ---------- */
+
+export const HabitLegendRow = styled.div`
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 0 16px 10px;
+    font-size: 11px;
+`;
+
+export const HabitLegendItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: ${colors.textSubtle};
+`;
+
+export const HabitLegendDot = styled.span`
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+    background: ${(p) => p.$bg};
+    border: 1px solid ${(p) => p.$border};
+`;
+
+/* ---------- Sabab modali (History bilan bir xil) ---------- */
+
+const fadeUp = keyframes`
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+export const ModalOverlay = styled.div`
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+`;
+
+export const ModalBox = styled.div`
+    background: ${tokens.colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: ${tokens.radius.lg};
+    padding: 28px 28px 24px;
+    width: 100%;
+    max-width: 400px;
+    animation: ${fadeUp} 0.25s ease both;
+`;
+
+export const ModalTitle = styled.h3`
+    font-family: ${tokens.font.display};
+    font-size: 16px;
+    font-weight: 700;
+    color: ${colors.text};
+    margin: 0 0 8px;
+`;
+
+export const ModalSubtitle = styled.p`
+    font-size: 13px;
+    color: ${colors.textMuted};
+    margin: 0 0 16px;
+    line-height: 1.5;
+`;
+
+export const ModalTextarea = styled.textarea`
+    width: 100%;
+    min-height: 90px;
+    background: ${tokens.colors.surfaceRaised};
+    border: 1px solid ${colors.border};
+    border-radius: 8px;
+    color: ${colors.text};
+    font-family: ${tokens.font.body};
+    font-size: 13px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+        border-color: ${colors.primary};
+    }
+
+    &::placeholder {
+        color: ${colors.textSubtle};
+    }
+`;
+
+export const ModalActions = styled.div`
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+`;
+
+export const ModalBtn = styled.button`
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    background: ${(p) => (p.$primary ? colors.primary : "transparent")};
+    color: ${(p) => (p.$primary ? "#0d0d0d" : colors.textMuted)};
+    border-color: ${(p) => (p.$primary ? colors.primary : colors.border)};
+
+    &:hover {
+        opacity: 0.85;
+    }
 `;
