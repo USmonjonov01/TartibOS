@@ -4,6 +4,8 @@ import { tokens } from "../../theme/tokens";
 export const colors = tokens.colors;
 export const font = tokens.font;
 
+const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
+
 const fadeUp = keyframes`
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -17,7 +19,7 @@ export const Wrapper = styled.div`
     color: ${colors.textPrimary};
 
     @media (max-width: 768px) {
-        padding: 24px 20px 48px;
+        padding: 24px 16px 48px;
     }
 `;
 
@@ -94,6 +96,7 @@ export const EmptyState = styled.div`
     background: ${colors.surface};
     border-radius: ${tokens.radius.lg};
     border: 1px solid ${colors.hairline};
+    box-shadow: ${cardShadow};
 `;
 
 export const EmptyTitle = styled.div`
@@ -118,10 +121,11 @@ export const ConfrontCard = styled.div`
     background: linear-gradient(160deg, ${colors.surfaceRaised} 0%, ${colors.surface} 100%);
     border: 1px solid ${colors.hairline};
     border-radius: ${tokens.radius.lg};
-    padding: 28px 32px;
-    margin-bottom: 20px;
+    padding: 32px 32px;
+    margin-bottom: 24px;
     position: relative;
     overflow: hidden;
+    box-shadow: ${cardShadow};
     animation: ${fadeUp} 0.4s ease 0.05s both;
 
     &::after {
@@ -136,7 +140,7 @@ export const ConfrontCard = styled.div`
     }
 
     @media (max-width: 640px) {
-        padding: 22px 20px;
+        padding: 24px 16px;
     }
 `;
 
@@ -261,8 +265,9 @@ export const SectionCard = styled.div`
     background: ${colors.surface};
     border: 1px solid ${colors.hairline};
     border-radius: ${tokens.radius.lg};
-    padding: 24px 26px;
-    margin-bottom: 20px;
+    padding: 24px 24px;
+    margin-bottom: 24px;
+    box-shadow: ${cardShadow};
     animation: ${fadeUp} 0.4s ease both;
 
     @media (max-width: 640px) {
@@ -397,7 +402,7 @@ export const RosterRow = styled.div`
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    border-radius: ${tokens.radius.sm};
+    border-radius: ${tokens.radius.md};
     background: ${colors.surfaceRaised};
     border: 1px solid ${colors.hairlineSoft};
     transition: all 0.2s ease;
@@ -477,7 +482,7 @@ export const OpsGrid = styled.div`
 export const OpsStat = styled.div`
     background: ${colors.surfaceRaised};
     border-radius: ${tokens.radius.md};
-    padding: 14px 16px;
+    padding: 16px 16px;
 `;
 
 export const OpsLabel = styled.div`

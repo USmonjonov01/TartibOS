@@ -21,14 +21,16 @@ export const colors = {
     hover: tokens.colors.surfaceRaised,
 };
 
+const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
+
 export const Wrapper = styled.div`
-    padding: 32px 40px;
+    padding: 40px 40px;
     max-width: 900px;
     margin: 0 auto;
     font-family: ${tokens.font.body};
 
     @media (max-width: 768px) {
-        padding: 20px;
+        padding: 16px;
     }
 `;
 
@@ -36,15 +38,15 @@ export const HeaderRow = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     gap: 16px;
     flex-wrap: wrap;
 `;
 
 export const Title = styled.h1`
     font-family: ${tokens.font.display};
-    font-size: 26px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 600;
     color: ${colors.text};
     margin: 0;
     letter-spacing: -0.02em;
@@ -60,11 +62,11 @@ export const AddButton = styled.button`
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
+    padding: 10px 20px;
     background: ${colors.primary};
     color: ${tokens.colors.bg};
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -83,24 +85,29 @@ export const TabsRow = styled.div`
     background: ${tokens.colors.surface};
     border: 1px solid ${colors.borderSubtle};
     padding: 4px;
-    border-radius: 10px;
+    border-radius: 14px;
     width: fit-content;
     max-width: 100%;
     overflow-x: auto;
 `;
 
 export const TabButton = styled.button`
-    padding: 7px 16px;
-    border-radius: 7px;
+    position: relative;
+    padding: 9px 18px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    transition: all 0.15s;
+    transition: background 0.15s, color 0.15s;
     white-space: nowrap;
     background: ${(p) => (p.$active ? tokens.colors.surfaceRaised : "transparent")};
     color: ${(p) => (p.$active ? colors.primary : colors.textMuted)};
+
+    &:hover {
+        color: ${(p) => (p.$active ? colors.primary : colors.text)};
+    }
 `;
 
 export const TabCount = styled.span`
@@ -116,9 +123,10 @@ export const TabCount = styled.span`
 export const ProgressCard = styled.div`
     background: ${tokens.colors.surface};
     border: 1px solid ${colors.border};
-    border-radius: ${tokens.radius.md};
-    padding: 16px 20px;
-    margin-bottom: 20px;
+    border-radius: ${tokens.radius.lg};
+    box-shadow: ${cardShadow};
+    padding: 20px 24px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     gap: 16px;
@@ -151,19 +159,26 @@ export const ProgressLabel = styled.span`
 export const List = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 `;
 
 export const MissionRow = styled.div`
     background: ${tokens.colors.surface};
     border: 1px solid ${colors.border};
-    border-radius: ${tokens.radius.sm};
-    padding: 14px 16px;
+    border-radius: 16px;
+    box-shadow: ${cardShadow};
+    padding: 16px 20px;
+    min-height: 56px;
+    box-sizing: border-box;
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
     opacity: ${(p) => (p.$done ? 0.6 : 1)};
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, background 0.15s;
+
+    &:hover {
+        background: ${(p) => (p.$done ? tokens.colors.surface : tokens.colors.surfaceHover)};
+    }
 `;
 
 export const CheckButton = styled.button`
@@ -171,7 +186,6 @@ export const CheckButton = styled.button`
     border: none;
     cursor: pointer;
     padding: 0;
-    margin-top: 2px;
     flex-shrink: 0;
     display: flex;
 `;
@@ -199,7 +213,7 @@ export const MissionMeta = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 6px;
+    margin-top: 8px;
     flex-wrap: wrap;
 `;
 
@@ -208,7 +222,7 @@ export const PriorityBadge = styled.span`
     font-weight: 600;
     color: ${(p) => p.$color};
     background: ${(p) => p.$bg};
-    padding: 2px 8px;
+    padding: 3px 9px;
     border-radius: 10px;
     white-space: nowrap;
 `;
@@ -227,15 +241,16 @@ export const RemoveButton = styled.button`
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 8px;
     display: flex;
     flex-shrink: 0;
     opacity: 0.4;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s, background 0.15s;
 
     &:hover {
         opacity: 1;
+        background: ${colors.dangerLight};
     }
 `;
 
@@ -243,8 +258,8 @@ export const CancelButton = styled.button`
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
+    padding: 6px;
+    border-radius: 8px;
     display: flex;
     flex-shrink: 0;
     opacity: 0.4;
@@ -265,16 +280,17 @@ export const RowActions = styled.div`
 
 export const EmptyState = styled.div`
     text-align: center;
-    padding: 60px 24px;
+    padding: 64px 24px;
     background: ${tokens.colors.surface};
-    border-radius: ${tokens.radius.md};
+    border-radius: ${tokens.radius.lg};
     border: 1px solid ${colors.border};
+    box-shadow: ${cardShadow};
 `;
 
 export const EmptyIcon = styled.div`
     display: flex;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     opacity: 0.7;
 `;
 
@@ -282,13 +298,13 @@ export const EmptyTitle = styled.div`
     font-size: 15px;
     font-weight: 600;
     color: ${colors.text};
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 `;
 
 export const EmptySub = styled.div`
     font-size: 13px;
     color: ${colors.textSubtle};
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 `;
 
 export const StatusText = styled.div`
@@ -303,10 +319,10 @@ export const ErrorBanner = styled.div`
     background: ${colors.dangerLight};
     color: #F0A99E;
     border: 1px solid rgba(200, 92, 78, 0.35);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 `;
 
 /* Modal */
@@ -335,7 +351,7 @@ export const ModalBox = styled.div`
 `;
 
 export const ModalPad = styled.div`
-    padding: 28px 28px 24px;
+    padding: 32px 32px 24px;
 `;
 
 export const ModalHeader = styled.div`
@@ -349,7 +365,7 @@ export const ModalTitle = styled.h3`
     margin: 0;
     font-family: ${tokens.font.display};
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     color: ${colors.text};
 `;
 
@@ -358,7 +374,7 @@ export const CloseButton = styled.button`
     border: none;
     cursor: pointer;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
 `;
 
@@ -381,13 +397,13 @@ export const FieldLabel = styled.label`
     font-size: 12px;
     font-weight: 600;
     color: ${colors.textMuted};
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 `;
 
 const fieldBase = `
     width: 100%;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     color: ${colors.text};
     font-family: inherit;
@@ -449,7 +465,7 @@ export const PrimaryButton = styled.button`
     background: ${colors.primary};
     color: ${tokens.colors.bg};
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -467,7 +483,7 @@ export const SecondaryButton = styled.button`
     background: ${colors.hover};
     color: ${colors.text};
     border: 1px solid ${colors.border};
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;

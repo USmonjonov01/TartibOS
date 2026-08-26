@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, RotateCcw, NotebookPen, CalendarDays, CalendarRange } from "lucide-react";
+import { CheckCircle2, RotateCcw, NotebookPen, CalendarDays, CalendarRange, Trash2 } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
@@ -54,6 +54,7 @@ import {
     HistoryEntryDate,
     HistoryEntryScores,
     HistoryScorePill,
+    HistoryDeleteBtn,
     HistoryEntryText,
     HistoryEntryLabel,
     colors,
@@ -164,6 +165,9 @@ const Review = () => {
         [now]
     );
 
+    // Backend "mode + date" (kunlik) yoki "mode + weekId" (haftalik) bo'yicha
+    // upsert qiladi — bitta kun/hafta uchun bazada har doim bittagina yozuv
+    // bo'ladi, shuning uchun oddiy find yetarli.
     const todayEntry = useMemo(
         () => reviews.find((r) => r.mode === "daily" && r.date === todayStr),
         [reviews, todayStr]
@@ -290,42 +294,43 @@ const Review = () => {
         setSubmitting(true);
         setSaveError(null);
         try {
-            const payload = mode === "daily"
-                ? {
-                      mode: "daily",
-                      date: todayStr,
-                      achievement: daily.achievement || null,
-                      mistake: daily.mistake || null,
-                      summary: daily.summary || null,
-                      nextFocus: daily.nextFocus || null,
-                      discipline: daily.discipline || 0,
-                      execution: daily.execution || 0,
-                  }
-                : {
-                      mode: "weekly",
-                      date: todayStr,
-                      weekId: currentWeekId,
-                      discipline: weekly.discipline || 0,
-                      execution: weekly.execution || 0,
-                      missionRate: weekly.missionRate || 0,
-                      habitConsistency: weekly.habitConsistency || 0,
-                      reflection: weekly.reflection || null,
-                  };
+            // Backend "mode + date" (kunlik) / "mode + weekId" (haftalik) bo'yicha
+            // o'zi upsert qiladi (mavjud bo'lsa yangilaydi, bo'lmasa yaratadi) —
+            // shu sabab frontend to'g'ridan-to'g'ri o'z maydon nomlarini yuboradi,
+            // qo'shimcha pack/unpack shart emas.
+            const payload =
+                mode === "daily"
+                    ? {
+                          mode: "daily",
+                          date: todayStr,
+                          achievement: daily.achievement || null,
+                          mistake: daily.mistake || null,
+                          summary: daily.summary || null,
+                          nextFocus: daily.nextFocus || null,
+                          discipline: daily.discipline || 0,
+                          execution: daily.execution || 0,
+                      }
+                    : {
+                          mode: "weekly",
+                          date: todayStr,
+                          weekId: currentWeekId,
+                          discipline: weekly.discipline || 0,
+                          execution: weekly.execution || 0,
+                          missionRate: weekly.missionRate || 0,
+                          habitConsistency: weekly.habitConsistency || 0,
+                          reflection: weekly.reflection || null,
+                      };
 
             const { data } = await dailyReviewApi.post("/reviews", payload);
-            const created = data.review || data;
+            const saved = data.review || data;
             setReviews((prev) => {
-                const idx = prev.findIndex((r) =>
-                    mode === "daily"
-                        ? r.mode === "daily" && r.date === todayStr
-                        : r.mode === "weekly" && r.weekId === currentWeekId
-                );
+                const idx = prev.findIndex((r) => r.id === saved.id);
                 if (idx >= 0) {
                     const next = [...prev];
-                    next[idx] = created;
+                    next[idx] = saved;
                     return next;
                 }
-                return [...prev, created];
+                return [...prev, saved];
             });
 
             setSaved(true);
@@ -340,6 +345,24 @@ const Review = () => {
     const clearCurrent = () => {
         if (mode === "daily") setDaily(emptyDaily);
         else setWeekly(emptyWeekly);
+    };
+
+    // Review tarixidan bitta yozuvni o'chirish. Ortiqcha bosishning oldini
+    // olish uchun o'chirilayotgan ID saqlanadi; muvaffaqiyatli o'chirilgach
+    // ro'yxatdan mahalliy ravishda (qayta so'rovsiz) olib tashlanadi.
+    const [deletingId, setDeletingId] = useState(null);
+    const deleteReviewEntry = async (id) => {
+        if (deletingId) return;
+        if (!window.confirm("Bu review yozuvini butunlay o'chirmoqchimisiz?")) return;
+        setDeletingId(id);
+        try {
+            await dailyReviewApi.delete(`/reviews/${id}`);
+            setReviews((prev) => prev.filter((r) => r.id !== id));
+        } catch (err) {
+            setSaveError(err.response?.data?.message || err.message || "Reviewni o'chirishda xatolik");
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     const switchMode = (m) => {
@@ -554,6 +577,14 @@ const Review = () => {
                                                             B {r.execution}
                                                         </HistoryScorePill>
                                                     )}
+                                                    <HistoryDeleteBtn
+                                                        type="button"
+                                                        title="O'chirish"
+                                                        disabled={deletingId === r.id}
+                                                        onClick={() => deleteReviewEntry(r.id)}
+                                                    >
+                                                        <Trash2 size={13} />
+                                                    </HistoryDeleteBtn>
                                                 </HistoryEntryScores>
                                             </HistoryEntryHead>
                                             {r.reflection ? (
@@ -593,6 +624,14 @@ const Review = () => {
                                                             B {r.execution}
                                                         </HistoryScorePill>
                                                     )}
+                                                    <HistoryDeleteBtn
+                                                        type="button"
+                                                        title="O'chirish"
+                                                        disabled={deletingId === r.id}
+                                                        onClick={() => deleteReviewEntry(r.id)}
+                                                    >
+                                                        <Trash2 size={13} />
+                                                    </HistoryDeleteBtn>
                                                 </HistoryEntryScores>
                                             </HistoryEntryHead>
                                             {r.achievement || r.summary ? (

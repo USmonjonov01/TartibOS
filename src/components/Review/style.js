@@ -471,6 +471,31 @@ export const HistoryScorePill = styled.span`
     border-radius: 8px;
 `;
 
+export const HistoryDeleteBtn = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: ${colors.textMuted};
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: ${colors.dangerSoft};
+        color: ${colors.danger};
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
 export const HistoryEntryText = styled.p`
     font-size: 12.5px;
     color: ${colors.textPrimary};

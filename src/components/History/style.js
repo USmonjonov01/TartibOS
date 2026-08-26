@@ -4,6 +4,8 @@ import { tokens } from "../../theme/tokens";
 export const colors = tokens.colors;
 export const font = tokens.font;
 
+const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
+
 const fadeUp = keyframes`
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -19,7 +21,7 @@ export const Wrapper = styled.div`
     color: ${colors.textPrimary};
 
     @media (max-width: 768px) {
-        padding: 24px 20px 48px;
+        padding: 24px 16px 48px;
     }
 `;
 
@@ -94,6 +96,7 @@ export const EmptyState = styled.div`
     background: ${colors.surface};
     border-radius: ${tokens.radius.lg};
     border: 1px solid ${colors.hairline};
+    box-shadow: ${cardShadow};
 `;
 
 export const EmptyTitle = styled.div`
@@ -116,8 +119,9 @@ export const SectionCard = styled.div`
     background: ${colors.surface};
     border: 1px solid ${colors.hairline};
     border-radius: ${tokens.radius.lg};
-    padding: 24px 26px;
-    margin-bottom: 20px;
+    padding: 24px 24px;
+    margin-bottom: 24px;
+    box-shadow: ${cardShadow};
     animation: ${fadeUp} 0.4s ease both;
 
     @media (max-width: 640px) {
@@ -481,7 +485,8 @@ export const ModalBox = styled.div`
     background: ${colors.surface};
     border: 1px solid ${colors.hairline};
     border-radius: ${tokens.radius.lg};
-    padding: 28px 28px 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    padding: 32px 32px 24px;
     width: 100%;
     max-width: 400px;
     animation: ${fadeUp} 0.25s ease both;
