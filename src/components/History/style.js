@@ -183,6 +183,7 @@ export const WeekRow = styled.button`
 
     &:hover {
         background: ${colors.surfaceRaised};
+        transform: translateX(2px);
     }
 `;
 

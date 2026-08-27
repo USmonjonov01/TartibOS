@@ -81,6 +81,10 @@ import {
     ModalTextarea,
     ModalActions,
     ModalBtn,
+    RatingStarsRow,
+    RatingStarBtn,
+    RatingHint,
+    ScoreStarsRow,
     colors,
 } from "./style";
 
@@ -122,6 +126,8 @@ const Dashboard = () => {
     const [pendingHabitKey, setPendingHabitKey] = useState(null);
     const [reasonModal, setReasonModal] = useState(null); // { habit }
     const [reasonText, setReasonText] = useState("");
+    const [ratingModal, setRatingModal] = useState(null); // { habit }
+    const [hoverStars, setHoverStars] = useState(0);
 
     const fetchMissions = useCallback(async () => {
         if (!user) return;
@@ -195,13 +201,23 @@ const Dashboard = () => {
         [currentWeek, todayKey]
     );
 
+    // Bajarilgan odatning ballini (2/4/6/8/10) qaytaradi, agar baholanmagan bo'lsa null
+    const getHabitScore = useCallback(
+        (habit) => {
+            const key = habitKey(habit);
+            const score = currentWeek?.scores?.[todayKey]?.[key];
+            return typeof score === "number" ? score : null;
+        },
+        [currentWeek, todayKey]
+    );
+
     const completedHabits = todayHabits.filter((h) => getHabitState(h) === "done").length;
     const disciplineScore = todayHabits.length > 0
         ? Math.round((completedHabits / todayHabits.length) * 100)
         : 0;
 
     const applyHabitStateChange = useCallback(
-        ({ habit, newState, note }) => {
+        ({ habit, newState, note, score }) => {
             const key = habitKey(habit);
             if (pendingHabitKey) return;
 
@@ -221,6 +237,16 @@ const Dashboard = () => {
             }
             const nextReasons = { ...currentReasons, [todayKey]: dayReasons };
 
+            // Ball faqat "bajarildi" holati uchun saqlanadi — boshqa holatlarda tozalanadi
+            const currentScores = currentWeekRef.current?.scores || {};
+            const dayScores = { ...(currentScores[todayKey] || {}) };
+            if (newState === "done" && typeof score === "number") {
+                dayScores[key] = score;
+            } else {
+                delete dayScores[key];
+            }
+            const nextScores = { ...currentScores, [todayKey]: dayScores };
+
             setHabitSyncError(null);
             setPendingHabitKey(key);
 
@@ -230,6 +256,7 @@ const Dashboard = () => {
                     weekId: currentWeekId,
                     dayKey: todayKey,
                     habitIds,
+                    scores: nextScores,
                     reasons: nextReasons,
                     totalHabits: todayHabits.length,
                 })
@@ -252,6 +279,9 @@ const Dashboard = () => {
         if (next === "excused") {
             setReasonModal({ habit });
             setReasonText("");
+        } else if (next === "done") {
+            setRatingModal({ habit });
+            setHoverStars(0);
         } else {
             applyHabitStateChange({ habit, newState: next });
         }
@@ -267,6 +297,18 @@ const Dashboard = () => {
     const handleReasonCancel = () => {
         setReasonModal(null);
         setReasonText("");
+    };
+
+    const handleRatingSelect = (stars) => {
+        if (!ratingModal) return;
+        applyHabitStateChange({ habit: ratingModal.habit, newState: "done", score: stars * 2 });
+        setRatingModal(null);
+        setHoverStars(0);
+    };
+
+    const handleRatingCancel = () => {
+        setRatingModal(null);
+        setHoverStars(0);
     };
 
     const todayMissions = useMemo(
@@ -435,6 +477,7 @@ const Dashboard = () => {
                                     ) : (
                                         todayHabits.map((habit) => {
                                             const state = getHabitState(habit);
+                                            const score = getHabitScore(habit);
                                             const isPending = pendingHabitKey === habitKey(habit);
                                             return (
                                                 <Row
@@ -450,6 +493,19 @@ const Dashboard = () => {
                                                         <RowTitle $done={state === "done"}>{habit.title}</RowTitle>
                                                     </RowBody>
                                                     <RowMeta>
+                                                        {state === "done" && score !== null && (
+                                                            <ScoreStarsRow title={`${score}/10`}>
+                                                                {[1, 2, 3, 4, 5].map((i) => (
+                                                                    <Star
+                                                                        key={i}
+                                                                        size={11}
+                                                                        color={colors.warning}
+                                                                        fill={i <= score / 2 ? colors.warning : "none"}
+                                                                        strokeWidth={1.5}
+                                                                    />
+                                                                ))}
+                                                            </ScoreStarsRow>
+                                                        )}
                                                         {habit.priority && <PriorityDot $color={priorityColor(habit.priority)} />}
                                                         <TimeTag>
                                                             <Clock size={12} />
@@ -459,55 +515,6 @@ const Dashboard = () => {
                                                 </Row>
                                             );
                                         })
-                                    )}
-                                </SectionBody>
-                            </SectionCard>
-
-                            <SectionCard>
-                                <SectionHeader>
-                                    <div>
-                                        <SectionTitle>Bugungi missiyalar</SectionTitle>
-                                        <SectionSubtitle>Qo'shimcha maqsadlar</SectionSubtitle>
-                                    </div>
-                                    <CountBadge $bg={colors.accentLight} $color={colors.accent}>
-                                        {completedMissions}/{todayMissions.length}
-                                    </CountBadge>
-                                </SectionHeader>
-                                <SectionBody>
-                                    {todayMissions.length === 0 ? (
-                                        <EmptyState>
-                                            <EmptyIcon>✦</EmptyIcon>
-                                            <EmptyTitle>Bugun missiya yo'q</EmptyTitle>
-                                            <EmptySub>Missions bo'limidan yangi missiya qo'shing</EmptySub>
-                                        </EmptyState>
-                                    ) : (
-                                        todayMissions.map((mission) => (
-                                            <Row
-                                                key={mission.id}
-                                                $done={mission.completed}
-                                                $dim={0.6}
-                                                onClick={() => toggleMission(mission)}
-                                            >
-                                                {mission.completed ? (
-                                                    <CheckCircle2 size={20} color={colors.accent} strokeWidth={2} />
-                                                ) : (
-                                                    <Circle size={20} color={colors.textSubtle} strokeWidth={2} />
-                                                )}
-                                                <RowBody>
-                                                    <RowTitle $done={mission.completed}>{mission.title}</RowTitle>
-                                                    {mission.notes && <RowNote>{mission.notes}</RowNote>}
-                                                </RowBody>
-                                                <RowMeta>
-                                                    {mission.priority && <PriorityDot $color={priorityColor(mission.priority)} />}
-                                                    {mission.start && (
-                                                        <TimeTag>
-                                                            <Clock size={12} />
-                                                            {mission.start}
-                                                        </TimeTag>
-                                                    )}
-                                                </RowMeta>
-                                            </Row>
-                                        ))
                                     )}
                                 </SectionBody>
                             </SectionCard>
@@ -557,6 +564,55 @@ const Dashboard = () => {
                                     To'liq tahlilni ko'rish <ArrowRight size={14} />
                                 </InsightLink>
                             </InsightBox>
+
+                            <SectionCard>
+                                <SectionHeader>
+                                    <div>
+                                        <SectionTitle>Bugungi missiyalar</SectionTitle>
+                                        <SectionSubtitle>Qo'shimcha maqsadlar</SectionSubtitle>
+                                    </div>
+                                    <CountBadge $bg={colors.accentLight} $color={colors.accent}>
+                                        {completedMissions}/{todayMissions.length}
+                                    </CountBadge>
+                                </SectionHeader>
+                                <SectionBody>
+                                    {todayMissions.length === 0 ? (
+                                        <EmptyState>
+                                            <EmptyIcon>✦</EmptyIcon>
+                                            <EmptyTitle>Bugun missiya yo'q</EmptyTitle>
+                                            <EmptySub>Missions bo'limidan yangi missiya qo'shing</EmptySub>
+                                        </EmptyState>
+                                    ) : (
+                                        todayMissions.map((mission) => (
+                                            <Row
+                                                key={mission.id}
+                                                $done={mission.completed}
+                                                $dim={0.6}
+                                                onClick={() => toggleMission(mission)}
+                                            >
+                                                {mission.completed ? (
+                                                    <CheckCircle2 size={18} color={colors.accent} strokeWidth={2} />
+                                                ) : (
+                                                    <Circle size={18} color={colors.textSubtle} strokeWidth={2} />
+                                                )}
+                                                <RowBody>
+                                                    <RowTitle $done={mission.completed}>{mission.title}</RowTitle>
+                                                    {mission.notes && <RowNote>{mission.notes}</RowNote>}
+                                                </RowBody>
+                                                <RowMeta>
+                                                    {mission.priority && <PriorityDot $color={priorityColor(mission.priority)} />}
+                                                    {mission.start && (
+                                                        <TimeTag>
+                                                            <Clock size={12} />
+                                                            {mission.start}
+                                                        </TimeTag>
+                                                    )}
+                                                </RowMeta>
+                                            </Row>
+                                        ))
+                                    )}
+                                </SectionBody>
+                            </SectionCard>
                         </Col>
                     </MainGrid>
                 </>
@@ -583,6 +639,45 @@ const Dashboard = () => {
                         </ModalBtn>
                         <ModalBtn type="button" $primary onClick={handleReasonConfirm}>
                             Saqlash
+                        </ModalBtn>
+                    </ModalActions>
+                </ModalBox>
+            </ModalOverlay>
+        )}
+
+        {ratingModal && (
+            <ModalOverlay onClick={handleRatingCancel}>
+                <ModalBox onClick={(e) => e.stopPropagation()}>
+                    <ModalTitle>⭐ Qanday bajardingiz?</ModalTitle>
+                    <ModalSubtitle>
+                        <strong>{ratingModal.habit.title}</strong> odatini qanchalik sifatli
+                        bajarganingizni baholang.
+                    </ModalSubtitle>
+                    <RatingStarsRow onMouseLeave={() => setHoverStars(0)}>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <RatingStarBtn
+                                key={i}
+                                type="button"
+                                onMouseEnter={() => setHoverStars(i)}
+                                onClick={() => handleRatingSelect(i)}
+                            >
+                                <Star
+                                    size={30}
+                                    color={colors.warning}
+                                    fill={i <= hoverStars ? colors.warning : "none"}
+                                    strokeWidth={1.5}
+                                />
+                            </RatingStarBtn>
+                        ))}
+                    </RatingStarsRow>
+                    <RatingHint $weak={hoverStars > 0 && hoverStars * 2 < 5}>
+                        {hoverStars > 0
+                            ? `${hoverStars * 2}/10 ball${hoverStars * 2 < 5 ? " — chala bajarilgan deb hisoblanadi" : ""}`
+                            : "Yulduzchani tanlang"}
+                    </RatingHint>
+                    <ModalActions>
+                        <ModalBtn type="button" onClick={handleRatingCancel}>
+                            Bekor qilish
                         </ModalBtn>
                     </ModalActions>
                 </ModalBox>

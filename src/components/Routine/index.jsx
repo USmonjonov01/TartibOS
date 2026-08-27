@@ -6,6 +6,7 @@ import { DAY_ORDER, DAY_LABELS_UZ } from "../../utils/date";
 import {
     Wrapper,
     HeaderRow,
+    Eyebrow,
     Title,
     Subtitle,
     AddButton,
@@ -222,6 +223,7 @@ const Routine = () => {
         <Wrapper>
             <HeaderRow>
                 <div>
+                    <Eyebrow>Odatlar</Eyebrow>
                     <Title>Routine</Title>
                     <Subtitle>Fundamental odatlar tizimi</Subtitle>
                 </div>

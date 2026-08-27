@@ -623,3 +623,170 @@ export const Footer = styled.footer`
         color: ${colors.textSubtle};
     }
 `;
+
+/* ---------- How it works (steps) ---------- */
+
+export const StepsSection = styled.section`
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+
+    @media (max-width: 768px) {
+        padding: 0 20px 56px;
+    }
+`;
+
+export const StepsHeader = styled.div`
+    text-align: center;
+    margin-bottom: 48px;
+`;
+
+export const StepsEyebrow = styled.div`
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: ${colors.primary};
+    text-transform: uppercase;
+    margin-bottom: 10px;
+`;
+
+export const StepsTitle = styled.h2`
+    font-family: ${tokens.font.display};
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 700;
+    color: ${colors.text};
+    letter-spacing: -0.02em;
+    margin: 0;
+`;
+
+export const StepsGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    position: relative;
+
+    @media (max-width: 760px) {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+`;
+
+export const StepCard = styled.div`
+    text-align: center;
+    position: relative;
+`;
+
+export const StepNumber = styled.div`
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: ${colors.primaryLight};
+    border: 1px solid rgba(231, 169, 76, 0.35);
+    color: ${colors.primary};
+    font-family: ${tokens.font.mono};
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+`;
+
+export const StepTitle = styled.h3`
+    font-size: 16px;
+    font-weight: 700;
+    color: ${colors.text};
+    margin: 0 0 8px;
+`;
+
+export const StepDesc = styled.p`
+    font-size: 14px;
+    color: ${colors.textMuted};
+    line-height: 1.6;
+    margin: 0;
+    max-width: 280px;
+    margin: 0 auto;
+`;
+
+/* ---------- FAQ ---------- */
+
+export const FAQSection = styled.section`
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+
+    @media (max-width: 768px) {
+        padding: 0 20px 56px;
+    }
+`;
+
+export const FAQHeader = styled.div`
+    text-align: center;
+    margin-bottom: 40px;
+`;
+
+export const FAQTitle = styled.h2`
+    font-family: ${tokens.font.display};
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 700;
+    color: ${colors.text};
+    letter-spacing: -0.02em;
+    margin: 0;
+`;
+
+export const FAQList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`;
+
+export const FAQItem = styled.div`
+    background: ${tokens.colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+
+    &:hover {
+        border-color: ${tokens.colors.steelPast};
+    }
+`;
+
+export const FAQQuestion = styled.button`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: ${colors.text};
+
+    svg {
+        flex-shrink: 0;
+        color: ${colors.textSubtle};
+        transition: transform 0.2s;
+        transform: ${(p) => (p.$open ? "rotate(180deg)" : "rotate(0deg)")};
+    }
+`;
+
+export const FAQAnswer = styled.div`
+    max-height: ${(p) => (p.$open ? "200px" : "0")};
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+`;
+
+export const FAQAnswerInner = styled.p`
+    padding: 0 22px 18px;
+    margin: 0;
+    font-size: 14px;
+    color: ${colors.textMuted};
+    line-height: 1.65;
+`;

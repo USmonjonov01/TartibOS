@@ -23,14 +23,17 @@ export const colors = {
 
 const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
 
+/* Ascent Log konsepsiyasi — Statistics/History bilan bir xil fon tili */
 export const Wrapper = styled.div`
-    padding: 40px 40px;
-    max-width: 900px;
+    min-height: 100%;
+    background: radial-gradient(ellipse 900px 500px at 15% -10%, ${tokens.colors.surfaceRaised} 0%, ${tokens.colors.bg} 55%);
+    padding: 40px 40px 56px;
+    max-width: 860px;
     margin: 0 auto;
     font-family: ${tokens.font.body};
 
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 24px 16px 40px;
     }
 `;
 
@@ -43,17 +46,37 @@ export const HeaderRow = styled.div`
     flex-wrap: wrap;
 `;
 
+export const Eyebrow = styled.div`
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: ${colors.primary};
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+        content: "";
+        width: 16px;
+        height: 1px;
+        background: ${colors.primary};
+    }
+`;
+
 export const Title = styled.h1`
     font-family: ${tokens.font.display};
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 30px;
+    font-weight: 700;
     color: ${colors.text};
     margin: 0;
     letter-spacing: -0.02em;
 `;
 
 export const Subtitle = styled.p`
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     color: ${colors.textSubtle};
     font-size: 14px;
 `;
@@ -62,30 +85,32 @@ export const AddButton = styled.button`
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 22px;
     background: ${colors.primary};
     color: ${tokens.colors.bg};
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.15s;
     font-family: inherit;
 
     &:hover {
         background: ${colors.primaryHover};
+        transform: translateY(-1px);
     }
 `;
 
+/* Segment-pill tabs, Figma dizayni bilan bir xil */
 export const TabsRow = styled.div`
     display: flex;
     gap: 4px;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     background: ${tokens.colors.surface};
     border: 1px solid ${colors.borderSubtle};
-    padding: 4px;
-    border-radius: 14px;
+    padding: 5px;
+    border-radius: 16px;
     width: fit-content;
     max-width: 100%;
     overflow-x: auto;
@@ -93,16 +118,17 @@ export const TabsRow = styled.div`
 
 export const TabButton = styled.button`
     position: relative;
-    padding: 9px 18px;
-    border-radius: 10px;
+    padding: 10px 22px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
     white-space: nowrap;
     background: ${(p) => (p.$active ? tokens.colors.surfaceRaised : "transparent")};
+    box-shadow: ${(p) => (p.$active ? "0 1px 2px rgba(0,0,0,0.3)" : "none")};
     color: ${(p) => (p.$active ? colors.primary : colors.textMuted)};
 
     &:hover {
@@ -110,20 +136,29 @@ export const TabButton = styled.button`
     }
 `;
 
+/* Endi tab burchagida suzuvchi badge sifatida ko'rinadi */
 export const TabCount = styled.span`
-    margin-left: 6px;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
     font-family: ${tokens.font.mono};
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    background: ${(p) => (p.$active ? colors.primaryLight : colors.borderSubtle)};
-    color: ${(p) => (p.$active ? colors.primary : colors.textSubtle)};
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: ${(p) => (p.$active ? colors.primary : tokens.colors.surfaceRaised)};
+    color: ${(p) => (p.$active ? tokens.colors.bg : colors.textSubtle)};
+    box-shadow: 0 0 0 2px ${tokens.colors.surface};
 `;
 
 export const ProgressCard = styled.div`
     background: ${tokens.colors.surface};
-    border: 1px solid ${colors.border};
-    border-radius: ${tokens.radius.lg};
+    border-radius: 18px;
     box-shadow: ${cardShadow};
     padding: 20px 24px;
     margin-bottom: 24px;
@@ -159,13 +194,22 @@ export const ProgressLabel = styled.span`
 export const List = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+`;
+
+/* RowActions avval e'lon qilinadi — MissionRow hover'da unga murojaat qiladi */
+export const RowActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
 `;
 
 export const MissionRow = styled.div`
     background: ${tokens.colors.surface};
-    border: 1px solid ${colors.border};
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: ${cardShadow};
     padding: 16px 20px;
     min-height: 56px;
@@ -173,21 +217,36 @@ export const MissionRow = styled.div`
     display: flex;
     align-items: center;
     gap: 14px;
-    opacity: ${(p) => (p.$done ? 0.6 : 1)};
+    opacity: ${(p) => (p.$done ? 0.55 : 1)};
     transition: opacity 0.2s, background 0.15s;
 
     &:hover {
         background: ${(p) => (p.$done ? tokens.colors.surface : tokens.colors.surfaceHover)};
     }
+
+    &:hover ${RowActions} {
+        opacity: 1;
+    }
 `;
 
+/* Doiraviy checkbox — Figma dizayni bilan bir xil */
 export const CheckButton = styled.button`
-    background: none;
-    border: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid ${(p) => (p.$done ? "transparent" : colors.border)};
+    background: ${(p) => (p.$done ? colors.successLight : "transparent")};
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+
+    &:hover {
+        border-color: ${(p) => (p.$done ? "transparent" : colors.primaryLight)};
+    }
 `;
 
 export const MissionBody = styled.div`
@@ -212,19 +271,29 @@ export const MissionNote = styled.div`
 export const MissionMeta = styled.div`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     margin-top: 8px;
     flex-wrap: wrap;
 `;
 
+/* Endi rangli nuqta + matn — pill-badge emas, Figma'dagi minimal uslub */
 export const PriorityBadge = styled.span`
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
     font-weight: 600;
     color: ${(p) => p.$color};
-    background: ${(p) => p.$bg};
-    padding: 3px 9px;
-    border-radius: 10px;
     white-space: nowrap;
+
+    &::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: ${(p) => p.$color};
+        flex-shrink: 0;
+    }
 `;
 
 export const MetaTag = styled.div`
@@ -245,11 +314,11 @@ export const RemoveButton = styled.button`
     border-radius: 8px;
     display: flex;
     flex-shrink: 0;
-    opacity: 0.4;
-    transition: opacity 0.15s, background 0.15s;
+    color: ${colors.textMuted};
+    transition: color 0.15s, background 0.15s;
 
     &:hover {
-        opacity: 1;
+        color: ${colors.danger};
         background: ${colors.dangerLight};
     }
 `;
@@ -262,40 +331,37 @@ export const CancelButton = styled.button`
     border-radius: 8px;
     display: flex;
     flex-shrink: 0;
-    opacity: 0.4;
-    transition: opacity 0.15s, background 0.15s;
+    color: ${colors.textMuted};
+    transition: color 0.15s, background 0.15s;
 
     &:hover {
-        opacity: 1;
+        color: ${colors.warning};
         background: ${colors.warningLight};
     }
 `;
 
-export const RowActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-`;
-
 export const EmptyState = styled.div`
     text-align: center;
-    padding: 64px 24px;
+    padding: 72px 24px;
     background: ${tokens.colors.surface};
-    border-radius: ${tokens.radius.lg};
-    border: 1px solid ${colors.border};
+    border-radius: 18px;
     box-shadow: ${cardShadow};
 `;
 
 export const EmptyIcon = styled.div`
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: ${colors.borderSubtle};
     display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
-    opacity: 0.7;
 `;
 
 export const EmptyTitle = styled.div`
-    font-size: 15px;
+    font-family: ${tokens.font.display};
+    font-size: 17px;
     font-weight: 600;
     color: ${colors.text};
     margin-bottom: 8px;

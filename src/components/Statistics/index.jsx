@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Card, Statistic, Progress, Empty } from "antd";
-import { Mountain, TrendingUp, TrendingDown, Minus, Target, Flame } from "lucide-react";
+import { Mountain, TrendingUp, TrendingDown, Minus, Target, Flame, Star } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
@@ -62,6 +62,7 @@ import {
     RosterName,
     RosterBarTrack,
     RosterBarFill,
+    RosterAvgScore,
     RosterPct,
     OpsGrid,
     OpsStat,
@@ -601,6 +602,15 @@ const Statistics = () => {
                                                         }
                                                     />
                                                 </RosterBarTrack>
+                                                {habit.avgScore !== null && (
+                                                    <RosterAvgScore
+                                                        title="O'rtacha sifat balli"
+                                                        $weak={habit.avgScore < 5}
+                                                    >
+                                                        <Star size={11} fill="currentColor" strokeWidth={0} />
+                                                        {habit.avgScore}
+                                                    </RosterAvgScore>
+                                                )}
                                                 <RosterPct
                                                     $color={
                                                         habit.rate >= 70 ? colors.success : habit.rate >= 40 ? colors.amber : colors.danger

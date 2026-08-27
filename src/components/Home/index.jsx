@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowRight,
@@ -7,6 +8,7 @@ import {
     Target,
     FileText,
     Shield,
+    ChevronDown,
 } from "lucide-react";
 import {
     Wrapper,
@@ -64,6 +66,23 @@ import {
     CTABox,
     CTATitle,
     CTADesc,
+    StepsSection,
+    StepsHeader,
+    StepsEyebrow,
+    StepsTitle,
+    StepsGrid,
+    StepCard,
+    StepNumber,
+    StepTitle,
+    StepDesc,
+    FAQSection,
+    FAQHeader,
+    FAQTitle,
+    FAQList,
+    FAQItem,
+    FAQQuestion,
+    FAQAnswer,
+    FAQAnswerInner,
     Footer,
     colors,
 } from "./style";
@@ -129,8 +148,43 @@ const miniHabits = [
     { name: "📖 Kitob o'qish", done: false },
 ];
 
+const steps = [
+    {
+        title: "Ro'yxatdan o'ting",
+        desc: "Bir necha soniyada hisob yarating — murakkab sozlash shart emas.",
+    },
+    {
+        title: "Tizimingizni quring",
+        desc: "Fundamental odatlar, missiyalar va routine'laringizni kiriting.",
+    },
+    {
+        title: "Kuzatib boring",
+        desc: "Har kuni belgilang, baholang — tizim statistikangizni o'zi hisoblaydi.",
+    },
+];
+
+const faqs = [
+    {
+        q: "TartibOS bepulmi?",
+        a: "Ha, TartibOS'ning asosiy imkoniyatlari — odatlar, missiyalar, statistika va review — bepul.",
+    },
+    {
+        q: "Ma'lumotlarim xavfsizmi?",
+        a: "Ma'lumotlaringiz shifrlangan holda saqlanadi va faqat sizga tegishli. Hech kim boshqa foydalanuvchi ma'lumotlariga kira olmaydi.",
+    },
+    {
+        q: "Mobil qurilmada ishlaydimi?",
+        a: "Ha, TartibOS istalgan brauzerda — kompyuter yoki telefonda — bab-baravar qulay ishlaydi.",
+    },
+    {
+        q: "Odatlarimni qanday baholayman?",
+        a: "Har bir odatni bajarganingizda 5 yulduzchagacha baho berasiz. Bu tizimga odatning shunchaki bajarilganini emas, qanchalik sifatli bajarilganini ham hisobga olish imkonini beradi.",
+    },
+];
+
 const Home = () => {
     const navigate = useNavigate();
+    const [openFaq, setOpenFaq] = useState(0);
 
     return (
         <Wrapper>
@@ -242,6 +296,23 @@ const Home = () => {
                 </PreviewCard>
             </HeroSection>
 
+            {/* Qanday ishlaydi */}
+            <StepsSection>
+                <StepsHeader>
+                    <StepsEyebrow>Qanday ishlaydi</StepsEyebrow>
+                    <StepsTitle>Uch qadamda boshlang</StepsTitle>
+                </StepsHeader>
+                <StepsGrid>
+                    {steps.map((step, i) => (
+                        <StepCard key={step.title}>
+                            <StepNumber>{i + 1}</StepNumber>
+                            <StepTitle>{step.title}</StepTitle>
+                            <StepDesc>{step.desc}</StepDesc>
+                        </StepCard>
+                    ))}
+                </StepsGrid>
+            </StepsSection>
+
             {/* Features */}
             <FeaturesSection>
                 <FeaturesHeader>
@@ -267,6 +338,33 @@ const Home = () => {
                     })}
                 </FeaturesGrid>
             </FeaturesSection>
+
+            {/* FAQ */}
+            <FAQSection>
+                <FAQHeader>
+                    <FAQTitle>Savol-javoblar</FAQTitle>
+                </FAQHeader>
+                <FAQList>
+                    {faqs.map((item, i) => {
+                        const isOpen = openFaq === i;
+                        return (
+                            <FAQItem key={item.q}>
+                                <FAQQuestion
+                                    type="button"
+                                    $open={isOpen}
+                                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                                >
+                                    {item.q}
+                                    <ChevronDown size={18} />
+                                </FAQQuestion>
+                                <FAQAnswer $open={isOpen}>
+                                    <FAQAnswerInner>{item.a}</FAQAnswerInner>
+                                </FAQAnswer>
+                            </FAQItem>
+                        );
+                    })}
+                </FAQList>
+            </FAQSection>
 
             {/* CTA */}
             <CTASection>

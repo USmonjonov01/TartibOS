@@ -559,3 +559,43 @@ export const ModalBtn = styled.button`
         opacity: 0.85;
     }
 `;
+
+/* ---------- Yulduzcha baholash (0/2/4/6/8/10 ball) ---------- */
+
+export const RatingStarsRow = styled.div`
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 18px 0 6px;
+`;
+
+export const RatingStarBtn = styled.button`
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    line-height: 0;
+    transition: transform 0.1s;
+
+    &:hover {
+        transform: scale(1.15);
+    }
+`;
+
+export const RatingHint = styled.div`
+    text-align: center;
+    font-family: ${tokens.font.mono};
+    font-size: 12px;
+    color: ${(p) => (p.$weak ? colors.warning : colors.textSubtle)};
+    min-height: 16px;
+    margin-bottom: 4px;
+`;
+
+/* Qatorda ko'rsatiladigan kichik, bosilmaydigan yulduzchalar */
+export const ScoreStarsRow = styled.div`
+    display: flex;
+    gap: 1px;
+    flex-shrink: 0;
+`;
+

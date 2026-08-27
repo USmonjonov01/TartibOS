@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Plus,
     CheckCircle2,
-    Circle,
     Clock,
     Calendar,
     X,
@@ -17,6 +16,7 @@ import { getDateStr } from "../../utils/date";
 import {
     Wrapper,
     HeaderRow,
+    Eyebrow,
     Title,
     Subtitle,
     AddButton,
@@ -281,6 +281,7 @@ const Missions = () => {
         <Wrapper>
             <HeaderRow>
                 <div>
+                    <Eyebrow>Maqsadlar</Eyebrow>
                     <Title>Missiyalar</Title>
                     <Subtitle>Maqsadlaringizni boshqaring</Subtitle>
                 </div>
@@ -300,7 +301,9 @@ const Missions = () => {
                         onClick={() => setActiveScope(scope)}
                     >
                         {SCOPE_LABELS[scope]}
-                        <TabCount $active={activeScope === scope}>{scopeCounts[scope]}</TabCount>
+                        {scopeCounts[scope] > 0 && (
+                            <TabCount $active={activeScope === scope}>{scopeCounts[scope]}</TabCount>
+                        )}
                     </TabButton>
                 ))}
             </TabsRow>
@@ -340,11 +343,9 @@ const Missions = () => {
                                     PRIORITY_COLORS[mission.priority] || PRIORITY_COLORS.ortacha;
                                 return (
                                     <MissionRow key={mission.id} $done={mission.completed}>
-                                        <CheckButton onClick={() => toggleMission(mission)}>
-                                            {mission.completed ? (
-                                                <CheckCircle2 size={20} color={colors.accent} strokeWidth={2} />
-                                            ) : (
-                                                <Circle size={20} color={colors.textSubtle} strokeWidth={2} />
+                                        <CheckButton onClick={() => toggleMission(mission)} $done={mission.completed}>
+                                            {mission.completed && (
+                                                <CheckCircle2 size={13} color={colors.success} strokeWidth={3} />
                                             )}
                                         </CheckButton>
 

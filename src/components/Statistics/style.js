@@ -456,6 +456,18 @@ export const RosterBarFill = styled.div`
     transition: width 0.4s ease;
 `;
 
+export const RosterAvgScore = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: ${font.mono};
+    font-size: 11px;
+    font-weight: 700;
+    color: ${(p) => (p.$weak ? colors.danger : colors.amber)};
+    flex-shrink: 0;
+    width: 30px;
+`;
+
 export const RosterPct = styled.div`
     width: 38px;
     text-align: right;

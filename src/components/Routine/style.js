@@ -25,13 +25,15 @@ export const colors = {
 const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
 
 export const Wrapper = styled.div`
-    padding: 40px 40px;
+    min-height: 100%;
+    background: radial-gradient(ellipse 900px 500px at 15% -10%, ${tokens.colors.surfaceRaised} 0%, ${tokens.colors.bg} 55%);
+    padding: 40px 40px 56px;
     max-width: 960px;
     margin: 0 auto;
     font-family: ${tokens.font.body};
 
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 24px 16px 40px;
     }
 `;
 
@@ -44,17 +46,37 @@ export const HeaderRow = styled.div`
     flex-wrap: wrap;
 `;
 
+export const Eyebrow = styled.div`
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: ${colors.primary};
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+        content: "";
+        width: 16px;
+        height: 1px;
+        background: ${colors.primary};
+    }
+`;
+
 export const Title = styled.h1`
     font-family: ${tokens.font.display};
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 30px;
+    font-weight: 700;
     color: ${colors.text};
     margin: 0;
     letter-spacing: -0.02em;
 `;
 
 export const Subtitle = styled.p`
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     color: ${colors.textSubtle};
     font-size: 14px;
 `;
@@ -63,48 +85,54 @@ export const AddButton = styled.button`
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 22px;
     background: ${colors.primary};
     color: ${tokens.colors.bg};
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.15s;
     font-family: inherit;
 
     &:hover {
         background: ${colors.primaryHover};
+        transform: translateY(-1px);
     }
 `;
 
 export const FilterRow = styled.div`
     display: flex;
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     flex-wrap: wrap;
 `;
 
 export const FilterChip = styled.button`
-    padding: 7px 16px;
-    border-radius: 20px;
-    border: 1px solid ${(p) => (p.$active ? colors.primary : colors.border)};
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: none;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.15s;
-    background: ${(p) => (p.$active ? colors.primaryLight : "transparent")};
-    color: ${(p) => (p.$active ? colors.primary : colors.textMuted)};
+    background: ${(p) => (p.$active ? colors.primary : tokens.colors.surface)};
+    color: ${(p) => (p.$active ? tokens.colors.bg : colors.textMuted)};
+    box-shadow: ${(p) => (p.$active ? "none" : cardShadow)};
     white-space: nowrap;
+
+    &:hover {
+        color: ${(p) => (p.$active ? tokens.colors.bg : colors.text)};
+    }
 `;
 
 export const SummaryGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 28px;
 
     @media (max-width: 560px) {
         grid-template-columns: 1fr;
@@ -113,22 +141,24 @@ export const SummaryGrid = styled.div`
 
 export const SummaryCard = styled.div`
     background: ${tokens.colors.surface};
-    border: 1px solid ${colors.border};
-    border-radius: ${tokens.radius.lg};
+    border-radius: 16px;
     box-shadow: ${cardShadow};
     padding: 18px 20px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 6px;
 `;
 
 export const SummaryLabel = styled.span`
-    font-size: 13px;
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: ${colors.textMuted};
 `;
 
 export const SummaryValue = styled.span`
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     color: ${colors.text};
     font-family: ${tokens.font.mono};
@@ -137,13 +167,21 @@ export const SummaryValue = styled.span`
 export const List = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+`;
+
+/* RoutineActions avval e'lon qilinadi — RoutineRow hover'da unga murojaat qiladi */
+export const RoutineActions = styled.div`
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
 `;
 
 export const RoutineRow = styled.div`
     background: ${tokens.colors.surface};
-    border: 1px solid ${colors.border};
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: ${cardShadow};
     padding: 18px 20px;
     min-height: 56px;
@@ -151,12 +189,15 @@ export const RoutineRow = styled.div`
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: background 0.15s, border-color 0.15s;
-    opacity: ${(p) => (p.$pending ? 0.6 : 1)};
+    transition: background 0.15s;
+    opacity: ${(p) => (p.$pending ? 0.55 : 1)};
 
     &:hover {
         background: ${tokens.colors.surfaceHover};
-        border-color: ${tokens.colors.steelPast};
+    }
+
+    &:hover ${RoutineActions} {
+        opacity: 1;
     }
 
     @media (max-width: 640px) {
@@ -165,8 +206,15 @@ export const RoutineRow = styled.div`
 `;
 
 export const RoutineIcon = styled.div`
-    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: ${colors.borderSubtle};
+    font-size: 19px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 export const RoutineBody = styled.div`
@@ -189,14 +237,24 @@ export const RoutineName = styled.span`
     overflow-wrap: anywhere;
 `;
 
+/* Rangli nuqta + matn, pill-badge emas — Missions bilan bir xil minimal uslub */
 export const PriorityBadge = styled.span`
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
     font-weight: 600;
     color: ${(p) => p.$color};
-    background: ${(p) => p.$bg};
-    padding: 3px 9px;
-    border-radius: 10px;
     white-space: nowrap;
+
+    &::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: ${(p) => p.$color};
+        flex-shrink: 0;
+    }
 `;
 
 export const RoutineMetaRow = styled.div`
@@ -227,9 +285,13 @@ export const DaysRow = styled.div`
 
 export const DayChip = styled.span`
     font-size: 10px;
-    font-weight: 600;
-    padding: 3px 6px;
-    border-radius: 6px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: ${(p) => (p.$active ? colors.primaryLight : colors.borderSubtle)};
     color: ${(p) => (p.$active ? colors.primary : colors.textSubtle)};
 `;
@@ -244,18 +306,12 @@ export const VersionTag = styled.div`
     white-space: nowrap;
 `;
 
-export const RoutineActions = styled.div`
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-`;
-
 export const IconButton = styled.button`
     width: 34px;
     height: 34px;
-    border-radius: 9px;
-    border: 1px solid ${colors.border};
-    background: transparent;
+    border-radius: 10px;
+    border: none;
+    background: ${colors.borderSubtle};
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -265,7 +321,7 @@ export const IconButton = styled.button`
 
     &:hover {
         background: ${(p) => (p.$danger ? colors.dangerLight : colors.hover)};
-        border-color: ${(p) => (p.$danger ? colors.danger : tokens.colors.steelPast)};
+        color: ${(p) => (p.$danger ? colors.danger : colors.text)};
     }
 
     &:disabled {
@@ -276,21 +332,27 @@ export const IconButton = styled.button`
 
 export const EmptyState = styled.div`
     text-align: center;
-    padding: 64px 24px;
+    padding: 72px 24px;
     background: ${tokens.colors.surface};
-    border-radius: ${tokens.radius.lg};
-    border: 1px solid ${colors.border};
+    border-radius: 18px;
     box-shadow: ${cardShadow};
 `;
 
 export const EmptyIcon = styled.div`
-    font-size: 36px;
-    margin-bottom: 16px;
-    opacity: 0.7;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: ${colors.borderSubtle};
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 export const EmptyTitle = styled.div`
-    font-size: 15px;
+    font-family: ${tokens.font.display};
+    font-size: 17px;
     font-weight: 600;
     color: ${colors.text};
     margin-bottom: 8px;
@@ -440,14 +502,14 @@ export const DaysPickerRow = styled.div`
 export const DayToggle = styled.button`
     width: 38px;
     height: 38px;
-    border-radius: 10px;
-    border: 1px solid ${(p) => (p.$active ? colors.primary : colors.border)};
+    border-radius: 50%;
+    border: none;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.12s;
-    background: ${(p) => (p.$active ? colors.primary : "transparent")};
+    background: ${(p) => (p.$active ? colors.primary : colors.borderSubtle)};
     color: ${(p) => (p.$active ? tokens.colors.bg : colors.textMuted)};
 `;
 
