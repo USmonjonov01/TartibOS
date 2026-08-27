@@ -248,6 +248,12 @@ export const RowNote = styled.div`
     margin-top: 1px;
 `;
 
+/* Bugungi kun uchun maxsus vazifa — sarlavha yonida, chiziqcha bilan, ko'zga tashlanadigan rangda */
+export const TodayPlanSpan = styled.span`
+    font-weight: 600;
+    color: ${colors.accent};
+`;
+
 export const RowMeta = styled.div`
     display: flex;
     align-items: center;

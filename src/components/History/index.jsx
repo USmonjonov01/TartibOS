@@ -420,6 +420,16 @@ const History = () => {
                                                         const editable = isEditableDay(dayKey);
                                                         const cellId = `${dayKey}:${habitKey(habit)}`;
                                                         const state = getCellState(dayKey, habit);
+                                                        const dayPlan = habit.dayPlans?.[dayKey];
+                                                        const baseHint = !editable
+                                                            ? "Faqat joriy hafta tahrirlanadi"
+                                                            : state === "done"
+                                                            ? "Bosing → Bajarilmadi"
+                                                            : state === "missed"
+                                                            ? "Bosing → Sababli bajarilmadi"
+                                                            : state === "excused"
+                                                            ? "Bosing → Tozalash"
+                                                            : "Bosing → Bajarildi";
                                                         return (
                                                             <Td key={dayKey}>
                                                                 <DayCellWrap>
@@ -429,17 +439,7 @@ const History = () => {
                                                                         $pending={pendingCell === cellId}
                                                                         disabled={!editable || pendingCell !== null}
                                                                         onClick={() => handleCellClick(dayKey, habit)}
-                                                                        title={
-                                                                            !editable
-                                                                                ? "Faqat joriy hafta tahrirlanadi"
-                                                                                : state === "done"
-                                                                                ? "Bosing → Bajarilmadi"
-                                                                                : state === "missed"
-                                                                                ? "Bosing → Sababli bajarilmadi"
-                                                                                : state === "excused"
-                                                                                ? "Bosing → Tozalash"
-                                                                                : "Bosing → Bajarildi"
-                                                                        }
+                                                                        title={dayPlan ? `${dayPlan}\n\n${baseHint}` : baseHint}
                                                                     >
                                                                         {stateIcon(state)}
                                                                     </DayCheckBtn>

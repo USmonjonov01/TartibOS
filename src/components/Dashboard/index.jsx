@@ -47,6 +47,7 @@ import {
     RowBody,
     RowTitle,
     RowNote,
+    TodayPlanSpan,
     RowMeta,
     PriorityDot,
     TimeTag,
@@ -479,6 +480,7 @@ const Dashboard = () => {
                                             const state = getHabitState(habit);
                                             const score = getHabitScore(habit);
                                             const isPending = pendingHabitKey === habitKey(habit);
+                                            const todayPlan = habit.dayPlans?.[todayKey];
                                             return (
                                                 <Row
                                                     key={habit.id}
@@ -490,7 +492,10 @@ const Dashboard = () => {
                                                     {habitStateIcon(state)}
                                                     <RowEmoji>{habit.icon || "🕒"}</RowEmoji>
                                                     <RowBody>
-                                                        <RowTitle $done={state === "done"}>{habit.title}</RowTitle>
+                                                        <RowTitle $done={state === "done"}>
+                                                            {habit.title}
+                                                            {todayPlan && <TodayPlanSpan> — {todayPlan}</TodayPlanSpan>}
+                                                        </RowTitle>
                                                     </RowBody>
                                                     <RowMeta>
                                                         {state === "done" && score !== null && (
