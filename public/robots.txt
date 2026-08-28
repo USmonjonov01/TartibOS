@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.tartibos.uz/sitemap.xml
+Sitemap: https://tartibos.uz/sitemap.xml

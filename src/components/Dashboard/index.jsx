@@ -15,6 +15,7 @@ import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { useNotifications } from "../../context/notifications";
+import Loader from "../Loader";
 import { missionApi } from "../../axios";
 import { getTodayHabits, dedupeRoutines, habitKey } from "../../utils/routine";
 import { DAY_ORDER, DAY_LABELS_UZ, getDayKey, getDateStr, getISOWeekId } from "../../utils/date";
@@ -70,7 +71,6 @@ import {
     InsightLabel,
     InsightText,
     InsightLink,
-    StatusText,
     ErrorBanner,
     HabitLegendRow,
     HabitLegendItem,
@@ -361,6 +361,13 @@ const Dashboard = () => {
     const streakTotalTracked = currentWeek ? Object.keys(currentWeek.statuses || {}).length : 0;
 
     const anyLoading = routineLoading || weeksLoading || missionsLoading;
+    // Haqiqiy progress — soxta animatsiya emas: 3 ta mustaqil so'rovdan
+    // nechtasi tugaganiga qarab hisoblanadi (routine, joriy hafta, missiyalar)
+    const loadProgress = useMemo(() => {
+        const sources = [!routineLoading, !weeksLoading, !missionsLoading];
+        const done = sources.filter(Boolean).length;
+        return (done / sources.length) * 100;
+    }, [routineLoading, weeksLoading, missionsLoading]);
     const anyError = routineError || weeksError || missionsError || habitSyncError;
 
     return (
@@ -382,7 +389,7 @@ const Dashboard = () => {
             )}
 
             {anyLoading && todayHabits.length === 0 && todayMissions.length === 0 ? (
-                <StatusText>Yuklanmoqda...</StatusText>
+                <Loader progress={loadProgress} />
             ) : (
                 <>
                     <TopGrid>

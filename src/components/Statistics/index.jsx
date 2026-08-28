@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Card, Statistic, Progress, Empty } from "antd";
 import { Mountain, TrendingUp, TrendingDown, Minus, Target, Flame, Star } from "lucide-react";
 import { useUser } from "../../context/users";
+import Loader from "../Loader";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { missionApi } from "../../axios";
@@ -25,7 +26,6 @@ import {
     Eyebrow,
     Title,
     Subtitle,
-    StatusText,
     ErrorBanner,
     EmptyState,
     EmptyTitle,
@@ -375,7 +375,7 @@ const Statistics = () => {
                 {anyError && <ErrorBanner>Ma'lumotlarni yuklashda xatolik yuz berdi: {anyError}</ErrorBanner>}
 
                 {anyLoading && !hasAnyHistory ? (
-                    <StatusText>YUKLANMOQDA...</StatusText>
+                    <Loader />
                 ) : !hasAnyHistory && totalHabitsCount === 0 ? (
                     <EmptyState>
                         <Empty

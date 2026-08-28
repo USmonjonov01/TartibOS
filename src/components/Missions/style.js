@@ -129,10 +129,10 @@ export const TabButton = styled.button`
     white-space: nowrap;
     background: ${(p) => (p.$active ? tokens.colors.surfaceRaised : "transparent")};
     box-shadow: ${(p) => (p.$active ? "0 1px 2px rgba(0,0,0,0.3)" : "none")};
-    color: ${(p) => (p.$active ? colors.primary : colors.textMuted)};
+    color: ${(p) => (p.$danger ? colors.danger : p.$active ? colors.primary : colors.textMuted)};
 
     &:hover {
-        color: ${(p) => (p.$active ? colors.primary : colors.text)};
+        color: ${(p) => (p.$danger ? colors.danger : p.$active ? colors.primary : colors.text)};
     }
 `;
 
@@ -151,8 +151,8 @@ export const TabCount = styled.span`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: ${(p) => (p.$active ? colors.primary : tokens.colors.surfaceRaised)};
-    color: ${(p) => (p.$active ? tokens.colors.bg : colors.textSubtle)};
+    background: ${(p) => (p.$danger ? colors.danger : p.$active ? colors.primary : tokens.colors.surfaceRaised)};
+    color: ${(p) => (p.$danger || p.$active ? tokens.colors.bg : colors.textSubtle)};
     box-shadow: 0 0 0 2px ${tokens.colors.surface};
 `;
 

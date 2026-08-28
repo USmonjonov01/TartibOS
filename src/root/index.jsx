@@ -8,6 +8,8 @@ import SignUpForm from "../components/Registration/SignUp"
 import NotFound from "../components/NotFound"
 
 function Root() {
+     const isAuthed = Boolean(localStorage.getItem("token"))
+
      return <div>
           <Routes>
                <Route path="/home" element={<Home />} />
@@ -23,7 +25,12 @@ function Root() {
                <Route path="sign-in" element={<SignInForm />} />
                <Route path="sign-up" element={<SignUpForm />} />
 
-               <Route path="/" element={<Navigate to="/dashboard" />} />
+               {/* Login qilmagan foydalanuvchi (va qidiruv botlari) uchun "/" darhol
+                   marketing sahifasini ko'rsatadi — ikki bosqichli redirect (avval
+                   /dashboard'ga, keyin /home'ga) Google'ga bo'sh sahifa ko'rsatib,
+                   indekslashni buzayotgan edi. Faqat token bor foydalanuvchi
+                   avtomatik dashboard'ga o'tadi. */}
+               <Route path="/" element={isAuthed ? <Navigate to="/dashboard" /> : <Home />} />
                <Route path="*" element={<NotFound />} />
           </Routes>
      </div>

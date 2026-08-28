@@ -10,6 +10,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { useUser } from "../../context/users";
+import Loader from "../Loader";
 import { useNotifications } from "../../context/notifications";
 import { missionApi } from "../../axios";
 import { getDateStr } from "../../utils/date";
@@ -43,7 +44,6 @@ import {
     EmptyIcon,
     EmptyTitle,
     EmptySub,
-    StatusText,
     ErrorBanner,
     ModalOverlay,
     ModalBox,
@@ -65,8 +65,11 @@ import {
     colors,
 } from "./style";
 
+// Yaratishda tanlanadigan haqiqiy toifalar (o'zgarmadi — backend shularni kutadi)
 const SCOPES = ["bugun", "kelgusi", "haftalik"];
-const SCOPE_LABELS = { bugun: "Bugun", kelgusi: "Kelgusi", haftalik: "Haftalik" };
+// Ko'rinadigan tab'lar — "kechikkan" bu yerda faqat ko'rsatish uchun, saqlanmaydi
+const DISPLAY_SCOPES = ["kechikkan", "bugun", "kelgusi", "haftalik"];
+const SCOPE_LABELS = { kechikkan: "Kechikkan", bugun: "Bugun", kelgusi: "Kelgusi", haftalik: "Haftalik" };
 
 const PRIORITY_LABELS = { yuqori: "Yuqori", ortacha: "O'rtacha", past: "Past" };
 const PRIORITY_ORDER = { yuqori: 0, ortacha: 1, past: 2 };
@@ -77,9 +80,19 @@ const PRIORITY_COLORS = {
 };
 
 const getMissionScope = (mission, todayStr) => {
+    // "Haftalik" doimiy toifa — sana o'tishi bilan o'zgarmaydi
+    if (mission.scope === "haftalik") return "haftalik";
+
+    // "Bugun"/"Kelgusi" endi sanaga qarab dinamik aniqlanadi — shunda muddati
+    // o'tib ketgan missiyalar abadiy "Bugun"da qolib ketmay, "Kechikkan"ga tushadi
+    if (mission.date) {
+        if (mission.date > todayStr) return "kelgusi";
+        if (mission.date < todayStr) return "kechikkan";
+        return "bugun";
+    }
+
     if (mission.scope && SCOPES.includes(mission.scope)) return mission.scope;
-    if (!mission.date) return "bugun";
-    return mission.date > todayStr ? "kelgusi" : "bugun";
+    return "bugun";
 };
 
 const DIFFICULTY_OPTIONS = [1, 2, 3, 4, 5];
@@ -141,7 +154,7 @@ const Missions = () => {
     }, [fetchMissions]);
 
     const scopeCounts = useMemo(() => {
-        const counts = { bugun: 0, kelgusi: 0, haftalik: 0 };
+        const counts = { kechikkan: 0, bugun: 0, kelgusi: 0, haftalik: 0 };
         missions.forEach((m) => {
             const scope = getMissionScope(m, todayStr);
             if (counts[scope] !== undefined) counts[scope] += 1;
@@ -231,7 +244,7 @@ const Missions = () => {
     };
 
     const openModal = () => {
-        setForm(emptyForm(activeScope, todayStr));
+        setForm(emptyForm(activeScope === "kechikkan" ? "bugun" : activeScope, todayStr));
         setFormError(null);
         setShowModal(true);
     };
@@ -294,22 +307,25 @@ const Missions = () => {
             {anyError && <ErrorBanner>Xatolik yuz berdi: {anyError}</ErrorBanner>}
 
             <TabsRow>
-                {SCOPES.map((scope) => (
+                {DISPLAY_SCOPES.map((scope) => (
                     <TabButton
                         key={scope}
                         $active={activeScope === scope}
+                        $danger={scope === "kechikkan"}
                         onClick={() => setActiveScope(scope)}
                     >
                         {SCOPE_LABELS[scope]}
                         {scopeCounts[scope] > 0 && (
-                            <TabCount $active={activeScope === scope}>{scopeCounts[scope]}</TabCount>
+                            <TabCount $active={activeScope === scope} $danger={scope === "kechikkan"}>
+                                {scopeCounts[scope]}
+                            </TabCount>
                         )}
                     </TabButton>
                 ))}
             </TabsRow>
 
             {loading && missions.length === 0 ? (
-                <StatusText>Yuklanmoqda...</StatusText>
+                <Loader />
             ) : (
                 <>
                     {filtered.length > 0 && (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Edit2, Trash2, X, Clock, History } from "lucide-react";
 import { useRoutine } from "../../context/routine";
+import Loader from "../Loader";
 import { dedupeRoutines } from "../../utils/routine";
 import { DAY_ORDER, DAY_LABELS_UZ } from "../../utils/date";
 import {
@@ -34,7 +35,6 @@ import {
     EmptyIcon,
     EmptyTitle,
     EmptySub,
-    StatusText,
     ErrorBanner,
     ModalOverlay,
     ModalBox,
@@ -236,7 +236,7 @@ const Routine = () => {
             {anyError && <ErrorBanner>Xatolik yuz berdi: {anyError}</ErrorBanner>}
 
             {loading && activeRoutines.length === 0 ? (
-                <StatusText>Yuklanmoqda...</StatusText>
+                <Loader />
             ) : (
                 <>
                     <FilterRow>

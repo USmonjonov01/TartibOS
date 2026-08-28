@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { ArrowLeft, CalendarClock, CheckCircle2, XCircle, AlertCircle, Info } from "lucide-react";
 import { useUser } from "../../context/users";
+import Loader from "../Loader";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { dedupeRoutines, habitKey } from "../../utils/routine";
@@ -20,7 +21,6 @@ import {
     Eyebrow,
     Title,
     Subtitle,
-    StatusText,
     ErrorBanner,
     EmptyState,
     EmptyTitle,
@@ -288,7 +288,7 @@ const History = () => {
                 {anyError && <ErrorBanner>Xatolik yuz berdi: {anyError}</ErrorBanner>}
 
                 {initialLoading ? (
-                    <StatusText>YUKLANMOQDA...</StatusText>
+                    <Loader />
                 ) : !selectedWeekId ? (
                     <SectionCard>
                         <SectionHead>
