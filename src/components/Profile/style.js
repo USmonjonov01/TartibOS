@@ -351,3 +351,72 @@ export const LogoutBtn = styled.button`
         background: rgba(200, 92, 78, 0.12);
     }
 `;
+
+/* ---------- Telegram bot ---------- */
+
+export const TelegramRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+`;
+
+export const TelegramBadge = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: ${(p) => (p.$connected ? colors.successSoft : colors.hairlineSoft)};
+    color: ${(p) => (p.$connected ? colors.success : colors.textMuted)};
+
+    &::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+`;
+
+export const TelegramConnectBtn = styled.button`
+    padding: 10px 22px;
+    background: #2AABEE;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s;
+    opacity: ${(p) => (p.$disabled ? 0.6 : 1)};
+
+    &:hover {
+        opacity: ${(p) => (p.$disabled ? 0.6 : 0.9)};
+    }
+`;
+
+export const TelegramDisconnectBtn = styled.button`
+    padding: 10px 20px;
+    background: transparent;
+    color: ${colors.textMuted};
+    border: 1px solid ${colors.hairline};
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+
+    &:hover {
+        color: ${colors.danger};
+        border-color: rgba(200, 92, 78, 0.5);
+    }
+`;

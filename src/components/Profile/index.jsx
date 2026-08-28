@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { UserRound, KeyRound, LogOut, Compass } from "lucide-react";
+import { UserRound, KeyRound, LogOut, Compass, Send } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
-import { missionApi } from "../../axios";
+import { missionApi, authApi } from "../../axios";
 import { filterByOwner } from "../../utils/ownership";
 import { dedupeRoutines } from "../../utils/routine";
 import {
@@ -37,6 +37,10 @@ import {
     DangerZone,
     DangerText,
     LogoutBtn,
+    TelegramRow,
+    TelegramBadge,
+    TelegramConnectBtn,
+    TelegramDisconnectBtn,
 } from "./style";
 
 const getInitials = (name) => {
@@ -162,6 +166,55 @@ const Profile = () => {
         }
     };
 
+    /* ---------- Telegram bot ---------- */
+    const [telegramStatus, setTelegramStatus] = useState(null); // { linked, linkedAt } | null
+    const [telegramLoading, setTelegramLoading] = useState(false);
+    const [telegramError, setTelegramError] = useState(null);
+
+    const fetchTelegramStatus = useCallback(async () => {
+        if (!user) return;
+        try {
+            const { data } = await authApi.get("/telegram/status");
+            setTelegramStatus(data);
+        } catch {
+            // Bot hali sozlanmagan bo'lishi mumkin — sahifa shunga qaramay ishlayveradi
+            setTelegramStatus(null);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- montaj vaqtida ma'lumot olish, standart pattern
+        fetchTelegramStatus();
+    }, [fetchTelegramStatus]);
+
+    const connectTelegram = async () => {
+        setTelegramLoading(true);
+        setTelegramError(null);
+        try {
+            const { data } = await authApi.post("/telegram/link-token");
+            window.open(data.deepLink, "_blank", "noopener,noreferrer");
+            // Foydalanuvchi Telegram'da /start bosgach holatni yangilash uchun
+            // bir necha soniyadan keyin qayta tekshiramiz
+            setTimeout(fetchTelegramStatus, 4000);
+        } catch (err) {
+            setTelegramError(err.response?.data?.message || "Bot hozircha mavjud emas");
+        } finally {
+            setTelegramLoading(false);
+        }
+    };
+
+    const disconnectTelegram = async () => {
+        setTelegramLoading(true);
+        try {
+            await authApi.delete("/telegram/unlink");
+            setTelegramStatus({ linked: false, linkedAt: null });
+        } catch (err) {
+            setTelegramError(err.response?.data?.message || "Uzishda xatolik");
+        } finally {
+            setTelegramLoading(false);
+        }
+    };
+
     return (
         <Wrapper>
             <Inner>
@@ -279,6 +332,36 @@ const Profile = () => {
                             {passSubmitting ? "Saqlanmoqda..." : "Parolni yangilash"}
                         </SaveBtn>
                     </form>
+                </SectionCard>
+
+                <SectionCard>
+                    <SectionHead>
+                        <SectionTitle>
+                            <Send size={16} color="#E7A94C" />
+                            Telegram bot
+                        </SectionTitle>
+                        <SectionCaption>
+                            Odatlaringiz vaqti kelganda Telegram orqali eslatma oling
+                        </SectionCaption>
+                    </SectionHead>
+
+                    <TelegramRow>
+                        <TelegramBadge $connected={Boolean(telegramStatus?.linked)}>
+                            {telegramStatus?.linked ? "Ulangan" : "Ulanmagan"}
+                        </TelegramBadge>
+
+                        {telegramStatus?.linked ? (
+                            <TelegramDisconnectBtn type="button" onClick={disconnectTelegram} disabled={telegramLoading}>
+                                Uzish
+                            </TelegramDisconnectBtn>
+                        ) : (
+                            <TelegramConnectBtn type="button" onClick={connectTelegram} $disabled={telegramLoading}>
+                                <Send size={15} />
+                                {telegramLoading ? "Ochilmoqda..." : "Telegram botni ulash"}
+                            </TelegramConnectBtn>
+                        )}
+                    </TelegramRow>
+                    {telegramError && <FieldError>{telegramError}</FieldError>}
                 </SectionCard>
 
                 <DangerZone>
