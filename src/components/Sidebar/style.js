@@ -35,21 +35,84 @@ export const Aside = styled.aside`
     top: 0;
     flex-shrink: 0;
 
+    /* Mobil/planshet: sidebar butunlay yashirin turadi (icon-rail emas),
+       hamburger bosilganda chap tomondan to'liq (matnlar bilan) chiqib
+       keladi — shu orqali kontent uchun joy kengayadi. */
     @media (max-width: 900px) {
-        width: 72px;
-        min-width: 72px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        min-width: 260px;
+        max-width: 82vw;
+        z-index: 1100;
+        box-shadow: ${(p) => (p.$open ? "12px 0 32px rgba(0, 0, 0, 0.45)" : "none")};
+        transform: translateX(${(p) => (p.$open ? "0" : "-100%")});
+        transition: transform 0.25s ease;
     }
+`;
+
+/* Drawer ochiq bo'lganda kontentni qorong'ilashtiruvchi fon — bosilsa yopiladi.
+   Faqat mobilda va faqat ochiq holatda render qilinadi (index.jsx'da). */
+export const Overlay = styled.div`
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 7, 12, 0.55);
+    z-index: 1090;
+    backdrop-filter: blur(1px);
+
+    @media (min-width: 901px) {
+        display: none;
+    }
+`;
+
+/* Faqat mobilda ko'rinadigan yuqori panel — hamburger tugmasi shu yerda.
+   Desktopda butunlay yo'q bo'lib, Main o'z holicha (avvalgidek) qoladi. */
+export const MobileTopBar = styled.div`
+    display: none;
+
+    @media (max-width: 900px) {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid ${colors.borderSubtle};
+        background: ${tokens.colors.surface};
+        position: sticky;
+        top: 0;
+        z-index: 1050;
+    }
+`;
+
+export const HamburgerBtn = styled.button`
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid ${colors.border};
+    background: ${tokens.colors.surfaceRaised};
+    color: ${colors.text};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+
+    &:hover {
+        background: ${colors.hover};
+    }
+`;
+
+export const MobileTopBarTitle = styled.div`
+    font-family: ${tokens.font.display};
+    font-weight: 700;
+    font-size: 14px;
+    color: ${colors.text};
 `;
 
 export const LogoBlock = styled.div`
     padding: 24px 20px 20px;
     border-bottom: 1px solid ${colors.borderSubtle};
-
-    @media (max-width: 900px) {
-        padding: 20px 12px;
-        display: flex;
-        justify-content: center;
-    }
 `;
 
 export const LogoRow = styled.div`
@@ -76,11 +139,7 @@ export const LogoIcon = styled.div`
     }
 `;
 
-export const LogoTextBlock = styled.div`
-    @media (max-width: 900px) {
-        display: none;
-    }
-`;
+export const LogoTextBlock = styled.div``;
 
 export const LogoTitle = styled.div`
     font-family: ${tokens.font.display};
@@ -116,10 +175,6 @@ export const NavSectionLabel = styled.div`
     letter-spacing: 0.1em;
     padding: 0 12px;
     margin-bottom: 6px;
-
-    @media (max-width: 900px) {
-        display: none;
-    }
 `;
 
 export const NavItem = styled(`button`)`
@@ -148,12 +203,6 @@ export const NavItem = styled(`button`)`
 
     svg {
         flex-shrink: 0;
-    }
-
-    span {
-        @media (max-width: 900px) {
-            display: none;
-        }
     }
 `;
 
@@ -202,10 +251,6 @@ export const UserAvatar = styled.div`
 export const UserInfo = styled.div`
     flex: 1;
     min-width: 0;
-
-    @media (max-width: 900px) {
-        display: none;
-    }
 `;
 
 export const UserName = styled.div`
@@ -244,12 +289,6 @@ export const BottomBtn = styled.button`
     &:hover {
         background: ${(p) => (p.$danger ? colors.dangerLight : colors.hover)};
         color: ${(p) => (p.$danger ? colors.danger : colors.text)};
-    }
-
-    span {
-        @media (max-width: 900px) {
-            display: none;
-        }
     }
 `;
 

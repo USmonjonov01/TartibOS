@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Badge, Popover } from "antd";
 import {
@@ -11,10 +12,11 @@ import {
     LogOut,
     ChevronRight,
     Bell,
+    Menu,
 } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useNotifications } from "../../context/notifications";
-import { Shell, Aside, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty,} from "./style";
+import { Shell, Aside, Overlay, MobileTopBar, HamburgerBtn, MobileTopBarTitle, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty,} from "./style";
 import TartibOSLogo from "../../assets/icons/TartibOS1.png"
 const mainNav = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,8 +38,16 @@ function Sidebar() {
     const navigate = useNavigate();
     const { user, logout } = useUser();
     const { history, unreadCount, markAllRead } = useNotifications();
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     const isActive = (path) => location.pathname.startsWith(path);
+
+    // Foydalanuvchi biror sahifaga o'tganda mobil drawer avtomatik yopiladi —
+    // aks holda ochiq holicha qolib, keyingi sahifa ustida turib qolar edi.
+    const handleNavigate = (path) => {
+        navigate(path);
+        setMobileOpen(false);
+    };
 
     const handleLogout = () => {
         logout();
@@ -75,7 +85,9 @@ function Sidebar() {
 
     return (
         <Shell>
-            <Aside>
+            {mobileOpen && <Overlay onClick={() => setMobileOpen(false)} />}
+
+            <Aside $open={mobileOpen}>
                 <LogoBlock>
                     <LogoRow>
                         <LogoIcon>
@@ -96,7 +108,7 @@ function Sidebar() {
                                 key={path}
                                 type="button"
                                 $active={isActive(path)}
-                                onClick={() => navigate(path)}
+                                onClick={() => handleNavigate(path)}
                             >
                                 <Icon size={16} strokeWidth={isActive(path) ? 2.5 : 2} />
                                 <span>{label}</span>
@@ -111,7 +123,7 @@ function Sidebar() {
                                 key={path}
                                 type="button"
                                 $active={isActive(path)}
-                                onClick={() => navigate(path)}
+                                onClick={() => handleNavigate(path)}
                             >
                                 <Icon size={16} strokeWidth={isActive(path) ? 2.5 : 2} />
                                 <span>{label}</span>
@@ -129,7 +141,7 @@ function Sidebar() {
                             <span>Bildirishnomalar</span>
                         </BottomBtn>
                     </Popover>
-                    <UserRow type="button" onClick={() => navigate("/profile")}>
+                    <UserRow type="button" onClick={() => handleNavigate("/profile")}>
                         <UserAvatar>
                             <span>{initial}</span>
                         </UserAvatar>
@@ -140,7 +152,7 @@ function Sidebar() {
                         <ChevronRight size={14} color={colors.textSubtle} />
                     </UserRow>
 
-                    <BottomBtn type="button" onClick={() => navigate("/profile")}>
+                    <BottomBtn type="button" onClick={() => handleNavigate("/profile")}>
                         <Settings size={15} />
                         <span>Sozlamalar</span>
                     </BottomBtn>
@@ -152,6 +164,12 @@ function Sidebar() {
             </Aside>
 
             <Main>
+                <MobileTopBar>
+                    <HamburgerBtn type="button" onClick={() => setMobileOpen(true)} aria-label="Menyuni ochish">
+                        <Menu size={18} />
+                    </HamburgerBtn>
+                    <MobileTopBarTitle>TartibOS</MobileTopBarTitle>
+                </MobileTopBar>
                 <Outlet />
             </Main>
         </Shell>

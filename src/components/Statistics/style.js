@@ -411,6 +411,14 @@ export const RosterRow = styled.div`
         border-color: ${colors.hairline};
         transform: translateX(2px);
     }
+
+    /* Tor ekranlarda barcha qat'iy kengliklar (ism, ball, foiz) progress-bar
+       uchun joy qoldirmay, qatorni siqib, "g'alati" ko'rinishga olib
+       kelayotgan edi — shuning uchun bo'shliq va kengliklarni kamaytiramiz. */
+    @media (max-width: 480px) {
+        gap: 6px;
+        padding: 8px;
+    }
 `;
 
 export const RosterRank = styled.div`
@@ -426,6 +434,10 @@ export const RosterRank = styled.div`
 export const RosterIcon = styled.span`
     font-size: 14px;
     flex-shrink: 0;
+
+    @media (max-width: 480px) {
+        display: none;
+    }
 `;
 
 export const RosterName = styled.div`
@@ -438,6 +450,12 @@ export const RosterName = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
     flex-shrink: 0;
+
+    @media (max-width: 480px) {
+        width: 64px;
+        min-width: 64px;
+        font-size: 12px;
+    }
 `;
 
 export const RosterBarTrack = styled.div`
@@ -466,6 +484,11 @@ export const RosterAvgScore = styled.div`
     color: ${(p) => (p.$weak ? colors.danger : colors.amber)};
     flex-shrink: 0;
     width: 30px;
+
+    @media (max-width: 480px) {
+        width: 24px;
+        font-size: 10px;
+    }
 `;
 
 export const RosterPct = styled.div`
@@ -476,6 +499,11 @@ export const RosterPct = styled.div`
     font-weight: 700;
     color: ${(p) => p.$color || colors.textSecondary};
     flex-shrink: 0;
+
+    @media (max-width: 480px) {
+        width: 30px;
+        font-size: 11px;
+    }
 `;
 
 /* ---------- Mission operations ---------- */

@@ -77,6 +77,10 @@ export const Card = styled.div`
     border: 1px solid ${colors.border};
     border-radius: ${tokens.radius.md};
     padding: 24px;
+
+    @media (max-width: 480px) {
+        padding: 18px;
+    }
 `;
 
 export const DisciplineCardWrap = styled(Card)`
@@ -176,6 +180,11 @@ export const SectionHeader = styled.div`
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+
+    @media (max-width: 480px) {
+        padding: 16px 16px 14px;
+    }
 `;
 
 export const SectionTitle = styled.h2`
@@ -307,6 +316,8 @@ export const WeeklyHeader = styled.div`
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
 `;
 
 export const WeeklyTitle = styled.h2`

@@ -35,6 +35,10 @@ export const Wrapper = styled.div`
     @media (max-width: 768px) {
         padding: 24px 16px 40px;
     }
+
+    @media (max-width: 420px) {
+        padding: 18px 12px 32px;
+    }
 `;
 
 export const HeaderRow = styled.div`
@@ -177,6 +181,14 @@ export const RoutineActions = styled.div`
     flex-shrink: 0;
     opacity: 0;
     transition: opacity 0.15s;
+
+    /* Touch qurilmalarda ":hover" holati umuman ishlamaydi (barmoq bilan
+       "hover" qilib bo'lmaydi), shuning uchun tahrirlash/o'chirish tugmalari
+       hech qachon ko'rinmay qolar edi. Bunday qurilmalarda ularni doim
+       ko'rinadigan qilamiz. */
+    @media (hover: none) {
+        opacity: 1;
+    }
 `;
 
 export const RoutineRow = styled.div`
@@ -202,6 +214,7 @@ export const RoutineRow = styled.div`
 
     @media (max-width: 640px) {
         flex-wrap: wrap;
+        padding: 16px;
     }
 `;
 
@@ -413,6 +426,10 @@ export const ModalHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    @media (max-width: 480px) {
+        padding: 18px 20px;
+    }
 `;
 
 export const ModalTitle = styled.h3`
@@ -437,12 +454,21 @@ export const ModalPad = styled.div`
     display: flex;
     flex-direction: column;
     gap: 18px;
+
+    @media (max-width: 480px) {
+        padding: 18px 20px 22px;
+        gap: 14px;
+    }
 `;
 
 export const FieldGrid = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 export const Field = styled.div``;
