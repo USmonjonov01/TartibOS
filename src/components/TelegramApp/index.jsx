@@ -43,17 +43,23 @@ import {
     colors,
 } from "./style";
 
-const loadTelegramScript = () =>
-    new Promise((resolve, reject) => {
-        if (window.Telegram?.WebApp) {
-            resolve(window.Telegram.WebApp);
-            return;
-        }
-        const script = document.createElement("script");
-        script.src = "https://telegram.org/js/telegram-web-app.js";
-        script.onload = () => resolve(window.Telegram?.WebApp || null);
-        script.onerror = () => reject(new Error("Telegram SDK yuklanmadi"));
-        document.head.appendChild(script);
+// SDK endi index.html'da statik <script> sifatida, bizning modulimizdan
+// OLDIN yuklanadi — shuning uchun bu deyarli har doim darhol tayyor bo'ladi.
+// Juda sekin tarmoqlar uchun bir necha marta qayta tekshiramiz, xolos.
+const waitForTelegramWebApp = (retries = 20, delayMs = 100) =>
+    new Promise((resolve) => {
+        const check = (n) => {
+            if (window.Telegram?.WebApp) {
+                resolve(window.Telegram.WebApp);
+                return;
+            }
+            if (n <= 0) {
+                resolve(null);
+                return;
+            }
+            setTimeout(() => check(n - 1), delayMs);
+        };
+        check(retries);
     });
 
 const STATUS_META = {
@@ -88,7 +94,7 @@ const TelegramApp = () => {
 
         const boot = async () => {
             try {
-                const tg = await loadTelegramScript();
+                const tg = await waitForTelegramWebApp();
                 if (cancelled) return;
 
                 if (!tg || !tg.initData) {
@@ -97,8 +103,16 @@ const TelegramApp = () => {
                     return;
                 }
 
+                // Iloji boricha tezroq — Telegram'ga ilova tayyor ekanini bildiradi
                 tg.ready();
                 tg.expand();
+                try {
+                    tg.setHeaderColor?.("#0E141F");
+                    tg.setBackgroundColor?.("#0E141F");
+                    tg.disableVerticalSwipes?.();
+                } catch {
+                    // Eski Telegram versiyalarida bu metodlar bo'lmasligi mumkin — muhim emas
+                }
 
                 const data = tg.initData;
                 setInitData(data);

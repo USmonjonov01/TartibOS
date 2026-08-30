@@ -197,14 +197,12 @@ export const List = styled.div`
     gap: 10px;
 `;
 
-/* RowActions avval e'lon qilinadi — MissionRow hover'da unga murojaat qiladi */
+/* Doim ko'rinadi — mobil/Telegram'da hover holati yo'q */
 export const RowActions = styled.div`
     display: flex;
     align-items: center;
     gap: 2px;
     flex-shrink: 0;
-    opacity: 0;
-    transition: opacity 0.15s;
 `;
 
 export const MissionRow = styled.div`
@@ -222,10 +220,6 @@ export const MissionRow = styled.div`
 
     &:hover {
         background: ${(p) => (p.$done ? tokens.colors.surface : tokens.colors.surfaceHover)};
-    }
-
-    &:hover ${RowActions} {
-        opacity: 1;
     }
 `;
 

@@ -13,7 +13,7 @@
 
     <link rel="canonical" href="https://tartibos.uz/" />
     <meta name="google-site-verification" content="RszWZ-PHFY-VAVgDwgZR-1VNzh0kbA7u5XpII3hIwhI" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="robots" content="index, follow" />
     <title>TartibOS — kundalik odatlar va intizomni boshqarish tizimi</title>
     <meta name="description" content="TartibOS — kundalik odatlar, maqsadlar va intizomni boshqarish hamda shaxsiy rivojlanishni kuzatish uchun shaxsiy tizim. Haftalik rejalarni tuzing, odatlaringizni belgilang va natijalarni kuzating." />
@@ -57,6 +57,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Telegram Mini App SDK — statik, bloklaydigan <script> (async/defer YO'Q),
+         shunda /telegram-app o'zining modul skripti ishga tushishidan OLDIN
+         window.Telegram.WebApp tayyor bo'ladi. Boshqa sahifalarga ta'siri yo'q. -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ import Home from "../components/Home"
 import SignInForm from "../components/Registration/SignIn"
 import SignUpForm from "../components/Registration/SignUp"
 import NotFound from "../components/NotFound"
+import TelegramApp from "../components/TelegramApp"
 
 function Root() {
      const isAuthed = Boolean(localStorage.getItem("token"))
@@ -13,6 +14,7 @@ function Root() {
      return <div>
           <Routes>
                <Route path="/home" element={<Home />} />
+               <Route path="/telegram-app" element={<TelegramApp />} />
 
                <Route element={<Sidebar />}>
                     {

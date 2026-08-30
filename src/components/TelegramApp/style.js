@@ -21,15 +21,26 @@ const cardShadow = "0 1px 2px rgba(0, 0, 0, 0.3)";
 
 export const Screen = styled.div`
     min-height: 100vh;
+    /* Telegram WebView'da 100vh ko'pincha haqiqiy ko'rinadigan balandlikdan
+       katta bo'lib chiqadi (o'z interfeys elementlari tufayli) — dvh
+       qo'llab-quvvatlansa, aniqrog'i ustunlik qiladi */
+    min-height: 100dvh;
+    width: 100%;
     background: ${tokens.colors.bg};
     color: ${colors.text};
     font-family: ${tokens.font.body};
     padding: 20px 16px 40px;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
     box-sizing: border-box;
+    overflow-x: hidden;
 `;
 
 export const CenterScreen = styled.div`
     min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -133,6 +144,7 @@ export const HabitTitle = styled.div`
     font-weight: 600;
     text-decoration: ${(p) => (p.$done ? "line-through" : "none")};
     color: ${(p) => (p.$done ? colors.textSubtle : colors.text)};
+    overflow-wrap: anywhere;
 `;
 
 export const HabitPlan = styled.div`
@@ -157,11 +169,13 @@ export const ActionRow = styled.div`
 
 export const ActionBtn = styled.button`
     flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 9px 0;
+    padding: 11px 4px;
+    -webkit-tap-highlight-color: transparent;
     border-radius: 10px;
     border: 1px solid ${(p) => (p.$active ? "transparent" : colors.border)};
     background: ${(p) => (p.$active ? p.$activeColor : "transparent")};
@@ -185,10 +199,12 @@ export const StarsRow = styled.div`
 export const StarBtn = styled.button`
     background: none;
     border: none;
-    padding: 2px;
+    padding: 8px;
+    margin: -8px;
     cursor: pointer;
     display: flex;
     line-height: 0;
+    -webkit-tap-highlight-color: transparent;
 `;
 
 export const ReasonInput = styled.textarea`

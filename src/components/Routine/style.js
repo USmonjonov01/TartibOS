@@ -174,21 +174,13 @@ export const List = styled.div`
     gap: 10px;
 `;
 
-/* RoutineActions avval e'lon qilinadi — RoutineRow hover'da unga murojaat qiladi */
+/* Doim ko'rinadi — @media(hover:none) orqali touch-aniqlash Telegram
+   WebView'ida ishonchsiz chiqdi (ba'zi WebView'lar noto'g'ri "hover: hover"
+   deb xabar beradi), shuning uchun endi barcha qurilmada shartsiz ko'rinadi */
 export const RoutineActions = styled.div`
     display: flex;
     gap: 6px;
     flex-shrink: 0;
-    opacity: 0;
-    transition: opacity 0.15s;
-
-    /* Touch qurilmalarda ":hover" holati umuman ishlamaydi (barmoq bilan
-       "hover" qilib bo'lmaydi), shuning uchun tahrirlash/o'chirish tugmalari
-       hech qachon ko'rinmay qolar edi. Bunday qurilmalarda ularni doim
-       ko'rinadigan qilamiz. */
-    @media (hover: none) {
-        opacity: 1;
-    }
 `;
 
 export const RoutineRow = styled.div`
@@ -206,10 +198,6 @@ export const RoutineRow = styled.div`
 
     &:hover {
         background: ${tokens.colors.surfaceHover};
-    }
-
-    &:hover ${RoutineActions} {
-        opacity: 1;
     }
 
     @media (max-width: 640px) {
