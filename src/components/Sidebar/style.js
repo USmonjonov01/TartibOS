@@ -132,7 +132,7 @@ export const LogoIcon = styled.div`
     flex-shrink: 0;
 
     span {
-        color: ${tokens.colors.bg};
+        color: ${tokens.colors.onAccent};
         font-size: 14px;
         font-weight: 700;
         font-family: ${tokens.font.mono};
@@ -242,7 +242,7 @@ export const UserAvatar = styled.div`
     flex-shrink: 0;
 
     span {
-        color: ${tokens.colors.bg};
+        color: ${tokens.colors.onAccent};
         font-size: 13px;
         font-weight: 700;
     }

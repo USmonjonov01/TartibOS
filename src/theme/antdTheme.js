@@ -1,60 +1,68 @@
 import { theme as antdBaseTheme } from "antd";
 import { tokens } from "./tokens";
 
-// antd komponentlarini "Balandlik jurnali" tokenlariga moslashtiradi — antd'ning
-// standart ko'k/oq ko'rinishi emas, TartibOS'ning o'z ovozi bilan gapiradi.
-export const antdTheme = {
-    algorithm: antdBaseTheme.darkAlgorithm,
-    token: {
-        colorPrimary: tokens.colors.amber,
-        colorBgBase: tokens.colors.bg,
-        colorBgContainer: tokens.colors.surface,
-        colorBgElevated: tokens.colors.surfaceRaised,
-        colorBorder: tokens.colors.hairline,
-        colorBorderSecondary: tokens.colors.hairlineSoft,
-        colorText: tokens.colors.textPrimary,
-        colorTextSecondary: tokens.colors.textSecondary,
-        colorTextTertiary: tokens.colors.textMuted,
-        colorSuccess: tokens.colors.success,
-        colorError: tokens.colors.danger,
-        colorWarning: tokens.colors.amber,
-        colorLink: tokens.colors.amber,
-        fontFamily: tokens.font.body,
-        borderRadius: 10,
-        wireframe: false,
-    },
-    components: {
-        Card: {
-            colorBgContainer: tokens.colors.surface,
-            colorBorderSecondary: tokens.colors.hairline,
+// antd komponentlarini (Card/Progress/Statistic/Table va h.k.) TartibOS'ning
+// o'z palitrasiga moslaydi. antd'ning rang algoritmi CSS o'zgaruvchilarini
+// (var(--x)) tushunmaydi — u xom hex/rgba qiymatlar bilan ishlaydi — shuning
+// uchun bu yerda tokens.palettes'dagi xom qiymatlardan foydalanamiz, `mode`ga
+// ("light" | "dark") qarab. ConfigProvider theme ni ThemeContext o'zgarganda
+// qayta hisoblab beradi (root/index.jsx'ga qarang).
+export const getAntdTheme = (mode = "light") => {
+    const p = tokens.palettes[mode] || tokens.palettes.light;
+
+    return {
+        algorithm: mode === "dark" ? antdBaseTheme.darkAlgorithm : antdBaseTheme.defaultAlgorithm,
+        token: {
+            colorPrimary: p.amber,
+            colorBgBase: p.bg,
+            colorBgContainer: p.surface,
+            colorBgElevated: p.surfaceRaised,
+            colorBorder: p.hairline,
+            colorBorderSecondary: p.hairlineSoft,
+            colorText: p.textPrimary,
+            colorTextSecondary: p.textSecondary,
+            colorTextTertiary: p.textMuted,
+            colorSuccess: p.success,
+            colorError: p.danger,
+            colorWarning: p.amber,
+            colorLink: p.amber,
+            fontFamily: tokens.font.body,
+            borderRadius: 10,
+            wireframe: false,
         },
-        Progress: {
-            defaultColor: tokens.colors.amber,
-            remainingColor: tokens.colors.hairlineSoft,
+        components: {
+            Card: {
+                colorBgContainer: p.surface,
+                colorBorderSecondary: p.hairline,
+            },
+            Progress: {
+                defaultColor: p.amber,
+                remainingColor: p.hairlineSoft,
+            },
+            Statistic: {
+                colorText: p.textPrimary,
+                colorTextDescription: p.textSecondary,
+            },
+            Table: {
+                colorBgContainer: p.surface,
+                headerBg: p.surfaceRaised,
+                borderColor: p.hairline,
+                headerColor: p.textSecondary,
+            },
+            Tag: {
+                defaultBg: p.surfaceRaised,
+                defaultColor: p.textSecondary,
+            },
+            Segmented: {
+                itemSelectedBg: p.amber,
+                itemSelectedColor: p.onAccent,
+                trackBg: p.surfaceRaised,
+            },
+            Empty: {
+                colorTextDisabled: p.textMuted,
+            },
         },
-        Statistic: {
-            colorText: tokens.colors.textPrimary,
-            colorTextDescription: tokens.colors.textSecondary,
-        },
-        Table: {
-            colorBgContainer: tokens.colors.surface,
-            headerBg: tokens.colors.surfaceRaised,
-            borderColor: tokens.colors.hairline,
-            headerColor: tokens.colors.textSecondary,
-        },
-        Tag: {
-            defaultBg: tokens.colors.surfaceRaised,
-            defaultColor: tokens.colors.textSecondary,
-        },
-        Segmented: {
-            itemSelectedBg: tokens.colors.amber,
-            itemSelectedColor: tokens.colors.bg,
-            trackBg: tokens.colors.surfaceRaised,
-        },
-        Empty: {
-            colorTextDisabled: tokens.colors.textMuted,
-        },
-    },
+    };
 };
 
-export default antdTheme;
+export default getAntdTheme;

@@ -16,6 +16,7 @@ import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
 import { useNotifications } from "../../context/notifications";
 import Loader from "../Loader";
+import DayTimeline from "../DayTimeline";
 import { missionApi } from "../../axios";
 import { getTodayHabits, dedupeRoutines, habitKey } from "../../utils/routine";
 import { DAY_ORDER, DAY_LABELS_UZ, getDayKey, getDateStr, getISOWeekId } from "../../utils/date";
@@ -318,6 +319,32 @@ const Dashboard = () => {
     );
     const completedMissions = todayMissions.filter((m) => m.completed).length;
 
+    const timelineItems = useMemo(() => {
+        const habitItems = todayHabits
+            .filter((h) => h.start)
+            .map((h) => ({
+                id: `habit-${h.id}`,
+                title: h.title,
+                icon: h.icon,
+                start: h.start,
+                end: h.end,
+                state: getHabitState(h) || "pending",
+            }));
+
+        const missionItems = todayMissions
+            .filter((m) => m.start)
+            .map((m) => ({
+                id: `mission-${m.id}`,
+                title: m.title,
+                icon: "✦",
+                start: m.start,
+                end: m.end,
+                state: m.completed ? "done" : "pending",
+            }));
+
+        return [...habitItems, ...missionItems];
+    }, [todayHabits, todayMissions, getHabitState]);
+
     const toggleMission = async (mission) => {
         const nextCompleted = !mission.completed;
         setMissions((prev) =>
@@ -359,6 +386,20 @@ const Dashboard = () => {
         ? Object.values(currentWeek.statuses || {}).filter((s) => s === "completed").length
         : 0;
     const streakTotalTracked = currentWeek ? Object.keys(currentWeek.statuses || {}).length : 0;
+
+    // "Streak" endi 100% bajarilgan kunlar soni emas — TartibOS bilan qancha
+    // vaqtdan beri (ro'yxatdan o'tgandan buyon) ishlab kelayotgani. Haftaning
+    // 7 kunida doim 100% natija ko'rsatib bo'lmaydi, lekin izchil urinish
+    // o'zi qadrli — shuni aks ettiradi.
+    const tenureDays = useMemo(() => {
+        if (!user?.createdAt) return null;
+        const created = new Date(user.createdAt);
+        if (Number.isNaN(created.getTime())) return null;
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfCreated = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+        const diffDays = Math.round((startOfToday - startOfCreated) / 86_400_000) + 1;
+        return Math.max(diffDays, 1);
+    }, [user, now]);
 
     const anyLoading = routineLoading || weeksLoading || missionsLoading;
     // Haqiqiy progress — soxta animatsiya emas: 3 ta mustaqil so'rovdan
@@ -412,19 +453,13 @@ const Dashboard = () => {
 
                         <StatCardWrap>
                             <StatHead>
-                                <StatLabel>HAFTALIK STREAK</StatLabel>
+                                <StatLabel>TARTIBOS BILAN</StatLabel>
                                 <StatIconBox $bg={colors.warningLight}>
                                     <Flame size={18} color={colors.warning} />
                                 </StatIconBox>
                             </StatHead>
-                            <StatValue>{streakDays} kun</StatValue>
-                            <StatSub $color={colors.warning}>
-                                {!currentWeek
-                                    ? "Bu hafta ma'lumot yo'q"
-                                    : streakDays === streakTotalTracked && streakDays > 0
-                                        ? "Hammasi bajarildi!"
-                                        : `${streakTotalTracked} kundan ${streakDays} tasi bajarildi`}
-                            </StatSub>
+                            <StatValue>{tenureDays !== null ? `${tenureDays} kun` : "—"}</StatValue>
+                            <StatSub $color={colors.warning}>Ro'yxatdan o'tgan kundan buyon izchil</StatSub>
                         </StatCardWrap>
 
                         <StatCardWrap>
@@ -448,7 +483,7 @@ const Dashboard = () => {
                     </TopGrid>
 
                     <MainGrid>
-                        <Col>
+                        <Col >
                             <SectionCard>
                                 <SectionHeader>
                                     <div>
@@ -475,7 +510,7 @@ const Dashboard = () => {
                                         </HabitLegendItem>
                                     </HabitLegendRow>
                                 )}
-                                <SectionBody>
+                                <SectionBody prop="scroll">
                                     {todayHabits.length === 0 ? (
                                         <EmptyState>
                                             <EmptyIcon>✦</EmptyIcon>
@@ -558,17 +593,17 @@ const Dashboard = () => {
                             <InsightBox>
                                 <InsightHead>
                                     <TrendingUp size={16} color={colors.primary} />
-                                    <InsightLabel>Tizim xulosasi</InsightLabel>
+                                    <InsightLabel>TartibOS kuzatuvi</InsightLabel>
                                 </InsightHead>
                                 <InsightText>
                                     {weeklyAvg === null
-                                        ? "Bu hafta uchun hali yetarli ma'lumot yo'q. Odatlaringizni bajarib boring, tizim tahlil qila boshlaydi."
+                                        ? "Bu hafta uchun hali yetarli ma'lumot yo'q. Odatlaringizni belgilab boring — birinchi kuzatuv shundan keyin paydo bo'ladi."
                                         : (
                                             <>
-                                                Ushbu hafta o'rtacha ijro <strong>{weeklyAvg}%</strong>.{" "}
+                                                Ushbu hafta o'rtacha ijro <strong>{weeklyAvg}%</strong> ni tashkil etdi.{" "}
                                                 {weeklyAvg >= 75
-                                                    ? "Zo'r natija, shu tezlikda davom eting!"
-                                                    : "Yana biroz sa'y-harakat kerak."}
+                                                    ? "Bu ishonchli izchillik — davom ettirish o'zingiz uchun ma'qul."
+                                                    : "Mumkin bo'lgan keyingi qadam: kunning bitta bandini barqarorlashtirish."}
                                             </>
                                         )}
                                 </InsightText>
@@ -627,6 +662,8 @@ const Dashboard = () => {
                             </SectionCard>
                         </Col>
                     </MainGrid>
+
+                    <DayTimeline items={timelineItems} />
                 </>
             )}
         </Wrapper>

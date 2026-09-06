@@ -377,8 +377,8 @@ export const StatusText = styled.div`
 
 export const ErrorBanner = styled.div`
     background: ${colors.dangerLight};
-    color: #F0A99E;
-    border: 1px solid rgba(200, 92, 78, 0.35);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;

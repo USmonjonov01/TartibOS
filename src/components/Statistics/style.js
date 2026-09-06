@@ -82,8 +82,8 @@ export const StatusText = styled.div`
 
 export const ErrorBanner = styled.div`
     background: ${colors.dangerSoft};
-    color: #F0A99E;
-    border: 1px solid rgba(200, 92, 78, 0.35);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;
@@ -261,6 +261,30 @@ export const KpiInsight = styled.span`
 
 /* ---------- Sections (shared card shell) ---------- */
 
+export const SectionWrapper = styled.div`
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+
+    & > * {
+        flex: 1;
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 860px) {
+        flex-direction: column;
+
+        & > * {
+            margin-bottom: 24px;
+        }
+
+        & > *:last-child {
+            margin-bottom: 0;
+        }
+    }
+`;
+
 export const SectionCard = styled.div`
     background: ${colors.surface};
     border: 1px solid ${colors.hairline};
@@ -270,7 +294,7 @@ export const SectionCard = styled.div`
     box-shadow: ${cardShadow};
     animation: ${fadeUp} 0.4s ease both;
 
-    @media (max-width: 640px) {
+    @media (max-width: 400px) {
         padding: 20px;
     }
 `;
@@ -332,7 +356,7 @@ export const DayChartRow = styled.div`
     display: flex;
     align-items: flex-end;
     gap: 10px;
-    height: 140px;
+    height: 180px;
     padding-top: 8px;
 `;
 
@@ -341,15 +365,15 @@ export const DayCol = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     height: 100%;
     justify-content: flex-end;
 `;
 
 export const DayBarTrack = styled.div`
     width: 100%;
-    max-width: 30px;
-    height: 100px;
+    max-width: 50px;
+    height: 150px;
     display: flex;
     align-items: flex-end;
     background: ${colors.hairlineSoft};
@@ -412,9 +436,6 @@ export const RosterRow = styled.div`
         transform: translateX(2px);
     }
 
-    /* Tor ekranlarda barcha qat'iy kengliklar (ism, ball, foiz) progress-bar
-       uchun joy qoldirmay, qatorni siqib, "g'alati" ko'rinishga olib
-       kelayotgan edi — shuning uchun bo'shliq va kengliklarni kamaytiramiz. */
     @media (max-width: 480px) {
         gap: 6px;
         padding: 8px;
@@ -607,4 +628,16 @@ export const InsightMarker = styled.div`
     color: ${colors.amber};
     flex-shrink: 0;
     margin-top: 2px;
+`;
+
+/* ---------- Routine vaqt taqsimoti (pie) ---------- */
+
+export const PieRow = styled.div`
+    display: flex;
+    justify-content: center;
+    padding: 8px 24px 12px;
+
+    @media (max-width: 560px) {
+        padding: 4px 12px 8px;
+    }
 `;

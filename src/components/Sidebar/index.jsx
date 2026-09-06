@@ -13,21 +13,27 @@ import {
     ChevronRight,
     Bell,
     Menu,
+    Sun,
+    Moon,
 } from "lucide-react";
 import { useUser } from "../../context/users";
+import { useTheme } from "../../context/theme";
 import { useNotifications } from "../../context/notifications";
 import { Shell, Aside, Overlay, MobileTopBar, HamburgerBtn, MobileTopBarTitle, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty,} from "./style";
 import TartibOSLogo from "../../assets/icons/TartibOS1.png"
-const mainNav = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/missions", label: "Missions", icon: Target },
-    { path: "/routine", label: "Routine", icon: RefreshCw },
+const homeNav = [
+    { path: "/dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
 ];
 
-const insightsNav = [
-    { path: "/statistics", label: "Statistics", icon: BarChart2 },
+const planNav = [
+    { path: "/missions", label: "Vazifalarim", icon: Target },
+    { path: "/routine", label: "Kun tartibim", icon: RefreshCw },
+];
+
+const progressNav = [
+    { path: "/statistics", label: "Taraqqiyot", icon: BarChart2 },
     { path: "/history", label: "Tarix", icon: CalendarClock },
-    { path: "/review", label: "Review", icon: FileText },
+    { path: "/review", label: "Sharh", icon: FileText },
 ];
 
 const formatNotifTime = (iso) =>
@@ -37,6 +43,7 @@ function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout } = useUser();
+    const { theme, toggleTheme } = useTheme();
     const { history, unreadCount, markAllRead } = useNotifications();
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -102,8 +109,7 @@ function Sidebar() {
 
                 <Nav>
                     <NavSectionWrap>
-                        <NavSectionLabel>ASOSIY</NavSectionLabel>
-                        {mainNav.map(({ path, label, icon: Icon }) => (
+                        {homeNav.map(({ path, label, icon: Icon }) => (
                             <NavItem
                                 key={path}
                                 type="button"
@@ -117,8 +123,23 @@ function Sidebar() {
                     </NavSectionWrap>
 
                     <NavSectionWrap>
-                        <NavSectionLabel>TAHLIL</NavSectionLabel>
-                        {insightsNav.map(({ path, label, icon: Icon }) => (
+                        <NavSectionLabel>REJA</NavSectionLabel>
+                        {planNav.map(({ path, label, icon: Icon }) => (
+                            <NavItem
+                                key={path}
+                                type="button"
+                                $active={isActive(path)}
+                                onClick={() => handleNavigate(path)}
+                            >
+                                <Icon size={16} strokeWidth={isActive(path) ? 2.5 : 2} />
+                                <span>{label}</span>
+                            </NavItem>
+                        ))}
+                    </NavSectionWrap>
+
+                    <NavSectionWrap>
+                        <NavSectionLabel>TARAQQIYOT</NavSectionLabel>
+                        {progressNav.map(({ path, label, icon: Icon }) => (
                             <NavItem
                                 key={path}
                                 type="button"
@@ -152,9 +173,9 @@ function Sidebar() {
                         <ChevronRight size={14} color={colors.textSubtle} />
                     </UserRow>
 
-                    <BottomBtn type="button" onClick={() => handleNavigate("/profile")}>
-                        <Settings size={15} />
-                        <span>Sozlamalar</span>
+                    <BottomBtn type="button" onClick={toggleTheme}>
+                        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+                        <span>{theme === "dark" ? "Kunduzgi rejim" : "Tungi rejim"}</span>
                     </BottomBtn>
                     <BottomBtn type="button" $danger onClick={handleLogout}>
                         <LogOut size={15} />

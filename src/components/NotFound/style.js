@@ -119,7 +119,7 @@ export const PrimaryButton = styled.button`
     gap: 8px;
     padding: 12px 24px;
     background: ${colors.amber};
-    color: ${colors.bg};
+    color: ${colors.onAccent};
     border: none;
     border-radius: 9px;
     font-size: 14.5px;

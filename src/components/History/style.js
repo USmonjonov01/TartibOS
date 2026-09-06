@@ -82,8 +82,8 @@ export const StatusText = styled.div`
 
 export const ErrorBanner = styled.div`
     background: ${colors.dangerSoft};
-    color: #f0a99e;
-    border: 1px solid rgba(200, 92, 78, 0.35);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;
@@ -549,7 +549,7 @@ export const ModalBtn = styled.button`
     border: 1px solid transparent;
     transition: all 0.15s;
     background: ${(p) => (p.$primary ? colors.amber : "transparent")};
-    color: ${(p) => (p.$primary ? "#0d0d0d" : colors.textMuted)};
+    color: ${(p) => (p.$primary ? tokens.colors.onAccent : colors.textMuted)};
     border-color: ${(p) => (p.$primary ? colors.amber : colors.hairline)};
 
     &:hover {

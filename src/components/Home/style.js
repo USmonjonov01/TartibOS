@@ -235,7 +235,7 @@ export const Badge = styled.div`
     font-weight: 600;
     letter-spacing: 0.03em;
     margin-bottom: 24px;
-    border: 1px solid rgba(231, 169, 76, 0.3);
+    border: 1px solid rgba(90, 84, 196, 0.3);
 `;
 
 export const BadgeDot = styled.div`
@@ -682,7 +682,7 @@ export const StepNumber = styled.div`
     height: 52px;
     border-radius: 50%;
     background: ${colors.primaryLight};
-    border: 1px solid rgba(231, 169, 76, 0.35);
+    border: 1px solid rgba(90, 84, 196, 0.35);
     color: ${colors.primary};
     font-family: ${tokens.font.mono};
     font-size: 18px;

@@ -168,9 +168,10 @@ export const Col = styled.div`
 
 export const SectionCard = styled.div`
     background: ${tokens.colors.surface};
-    border: 1px solid ${colors.border};
+    border: 1px solid ${colors.borderSubtle};
     border-radius: ${tokens.radius.md};
-    overflow: hidden;
+    max-height: 660px;
+    height: 100%;
 `;
 
 export const SectionHeader = styled.div`
@@ -214,6 +215,14 @@ export const CountBadge = styled.span`
 
 export const SectionBody = styled.div`
     padding: 8px 16px 16px;
+      ${({ prop }) => {
+        switch (prop) {
+            case 'scroll':
+                return { overflow: 'scroll' }
+            default: return { overflow: "hidden" }
+        }
+
+    }}
 `;
 
 export const Row = styled.div`
@@ -394,8 +403,8 @@ export const DayTag = styled.span`
 `;
 
 export const InsightBox = styled.div`
-    background: linear-gradient(135deg, ${tokens.colors.amberSoft} 0%, ${tokens.colors.surfaceRaised} 100%);
-    border: 1px solid ${colors.border};
+    background: ${colors.primaryLight};
+    border: 1px solid ${colors.borderSubtle};
     border-radius: ${tokens.radius.md};
     padding: 20px 24px;
 `;
@@ -408,21 +417,21 @@ export const InsightHead = styled.div`
 `;
 
 export const InsightLabel = styled.span`
-    font-family: ${tokens.font.mono};
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-family: ${tokens.font.body};
+    font-size: 13px;
+    font-weight: 600;
     color: ${colors.primary};
 `;
 
 export const InsightText = styled.p`
     margin: 0 0 12px;
-    font-size: 14px;
+    font-size: 14.5px;
     color: ${colors.text};
-    line-height: 1.6;
+    line-height: 1.65;
 
     strong {
         color: ${colors.primary};
+        font-weight: 600;
     }
 `;
 
@@ -446,8 +455,8 @@ export const StatusText = styled.div`
 
 export const ErrorBanner = styled.div`
     background: ${tokens.colors.dangerSoft};
-    color: #F0A99E;
-    border: 1px solid rgba(200, 92, 78, 0.35);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     border-radius: 8px;
     padding: 12px 16px;
     font-size: 13px;
@@ -569,7 +578,7 @@ export const ModalBtn = styled.button`
     border: 1px solid transparent;
     transition: all 0.15s;
     background: ${(p) => (p.$primary ? colors.primary : "transparent")};
-    color: ${(p) => (p.$primary ? "#0d0d0d" : colors.textMuted)};
+    color: ${(p) => (p.$primary ? tokens.colors.onAccent : colors.textMuted)};
     border-color: ${(p) => (p.$primary ? colors.primary : colors.border)};
 
     &:hover {

@@ -76,8 +76,10 @@ import {
     InsightList,
     InsightItem,
     InsightMarker,
+    PieRow,
     colors,
     font,
+    SectionWrapper,
 } from "./style";
 
 const fmtDelta = (delta) => {
@@ -86,6 +88,91 @@ const fmtDelta = (delta) => {
     return `${delta > 0 ? "+" : ""}${delta}%`;
 };
 const fmtPct = (v) => (v === null || v === undefined ? "—" : `${v}%`);
+const fmtDuration = (min) => {
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    if (h === 0) return `${m} daq`;
+    if (m === 0) return `${h} soat`;
+    return `${h}s ${m}d`;
+};
+
+const polarToXY = (cx, cy, r, angleDeg) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+const describeSlice = (cx, cy, r, startAngle, endAngle) => {
+    const start = polarToXY(cx, cy, r, endAngle);
+    const end = polarToXY(cx, cy, r, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+};
+
+// Haqiqiy aylana diagramma — har bir dilim tashqarisiga chiqarilgan yorliq va
+// bog'lovchi chiziq bilan. Bog'lovchi chiziq dilim rangida (assotsiatsiya
+// uchun), lekin YORLIQ MATNI har doim mustaqil, o'qilishi oson rangda —
+// dilim rangi juda xira (masalan "bo'sh vaqt") bo'lganda ham matn qorayib
+// yoki ko'rinmay qolmasin uchun.
+const PieChart = ({ data, size = 200 }) => {
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+    if (total <= 0) return null;
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size * 0.32;
+    const labelR = r + 20;
+
+    let acc = 0;
+    const slices = data.map((d) => {
+        const startAngle = (acc / total) * 360;
+        acc += d.value;
+        const endAngle = (acc / total) * 360;
+        return { ...d, startAngle, endAngle, midAngle: (startAngle + endAngle) / 2, pct: Math.round((d.value / total) * 100) };
+    });
+
+    return (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: "visible" }}>
+            {slices.map((s) => (
+                <path
+                    key={s.id}
+                    d={describeSlice(cx, cy, r, s.startAngle, s.endAngle)}
+                    fill={s.color}
+                    stroke={colors.surface}
+                    strokeWidth={2}
+                />
+            ))}
+            {slices.map((s) => {
+                if (s.pct < 2) return null;
+                const edge = polarToXY(cx, cy, r, s.midAngle);
+                const bend = polarToXY(cx, cy, labelR, s.midAngle);
+                const goesRight = bend.x >= cx;
+                const lineEndX = bend.x + (goesRight ? 10 : -10);
+                return (
+                    <g key={`label-${s.id}`}>
+                        <polyline
+                            points={`${edge.x},${edge.y} ${bend.x},${bend.y} ${lineEndX},${bend.y}`}
+                            fill="none"
+                            stroke={s.color}
+                            strokeWidth={1.4}
+                        />
+                        <text
+                            x={lineEndX + (goesRight ? 4 : -4)}
+                            y={bend.y}
+                            dominantBaseline="middle"
+                            textAnchor={goesRight ? "start" : "end"}
+                            fontSize="11.5"
+                            fontFamily={font.body}
+                            fontWeight="600"
+                            fill={colors.textSecondary}
+                        >
+                            {s.label} {s.pct}%
+                        </text>
+                    </g>
+                );
+            })}
+        </svg>
+    );
+};
 
 const trendColor = (delta) => {
     if (delta === null || delta === undefined) return colors.textMuted;
@@ -267,6 +354,96 @@ const Statistics = () => {
 
     const weeklyTrend = useMemo(() => getWeeklyTrend(weeks, totalHabitsCount, 8), [weeks, totalHabitsCount]);
     const priorityBreakdown = useMemo(() => getMissionPriorityBreakdown(missions), [missions]);
+
+    // --- Routine vaqt taqsimoti: bugun faol odatlar 24 soatning qancha
+    // qismini egallayotgani + muhimlik darajasi bo'yicha bajarilish holati ---
+    const dedupedRoutines = useMemo(() => dedupeRoutines(routines), [routines]);
+    const routineRateById = useMemo(() => {
+        const map = new Map();
+        habitRates.forEach((h) => map.set(h.id, h));
+        return map;
+    }, [habitRates]);
+
+    const toMinutes = (hhmm) => {
+        if (!hhmm || typeof hhmm !== "string" || !hhmm.includes(":")) return null;
+        const [h, m] = hhmm.split(":").map(Number);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+    };
+
+    const todayRoutines = useMemo(
+        () => dedupedRoutines.filter((r) => !r.days || r.days.length === 0 || r.days.includes(todayKey)),
+        [dedupedRoutines, todayKey]
+    );
+
+    const routineTimeStats = useMemo(() => {
+        const byPriority = { yuqori: 0, ortacha: 0, past: 0 };
+        let occupiedMin = 0;
+
+        todayRoutines.forEach((r) => {
+            const start = toMinutes(r.start);
+            const end = toMinutes(r.end);
+            const duration = start !== null && end !== null && end > start ? end - start : 30;
+            occupiedMin += duration;
+            const p = r.priority && byPriority[r.priority] !== undefined ? r.priority : "ortacha";
+            byPriority[p] += duration;
+        });
+
+        const occupiedPct = Math.min(100, Math.round((occupiedMin / 1440) * 100));
+        return { occupiedMin, occupiedPct, freeMin: Math.max(1440 - occupiedMin, 0), byPriority };
+    }, [todayRoutines]);
+
+    // Aynan qaysi odat 24 soatning eng katta qismini egallayotgani — eng
+    // uzoq davom etadigan 4 ta odat alohida, qolganlari "Boshqa odatlar"da.
+    // MUHIM: rang har doim aniq belgilangan token bo'lishi kerak — avval
+    // bu yerda `colors.muted` ishlatilgan edi, lekin bunday kalit tokens
+    // ichida yo'q edi, shuning uchun fill "undefined" bo'lib, brauzer uni
+    // qora rangga standartlashtirib qo'ygan (ekrandagi katta qora dilim —
+    // aynan shu bug edi). Endi mavjud `colors.textMuted` ishlatiladi.
+    const HABIT_CHART_COLORS = [colors.primary, colors.steelPast, colors.success, colors.amberStrong];
+
+    const habitTimeBreakdown = useMemo(() => {
+        const withDuration = todayRoutines
+            .map((r) => {
+                const start = toMinutes(r.start);
+                const end = toMinutes(r.end);
+                const duration = start !== null && end !== null && end > start ? end - start : 30;
+                return { id: r.id, title: r.title, icon: r.icon, duration };
+            })
+            .sort((a, b) => b.duration - a.duration);
+
+        const top = withDuration.slice(0, 4).map((r, i) => ({
+            ...r,
+            color: HABIT_CHART_COLORS[i % HABIT_CHART_COLORS.length],
+        }));
+        const restDuration = withDuration.slice(4).reduce((sum, r) => sum + r.duration, 0);
+        if (restDuration > 0) {
+            top.push({ id: "rest", title: "Boshqa odatlar", icon: null, duration: restDuration, color: colors.textMuted });
+        }
+
+        return top;
+    }, [todayRoutines]);
+
+    const priorityPieData = useMemo(
+        () =>
+            [
+                { id: "yuqori", label: "Yuqori muhimlik", value: routineTimeStats.byPriority.yuqori, color: PRIORITY_META.yuqori.color },
+                { id: "ortacha", label: "O'rtacha muhimlik", value: routineTimeStats.byPriority.ortacha, color: PRIORITY_META.ortacha.color },
+                { id: "past", label: "Past muhimlik", value: routineTimeStats.byPriority.past, color: PRIORITY_META.past.color },
+                // "Bo'sh vaqt" — hali band qilinmagan vaqt. Avval juda xira
+                // (`hairlineSoft`) rangda edi, shuning uchun deyarli
+                // ko'rinmas / "qora"dek tuyular edi. Endi ancha ochiqroq,
+                // lekin baribir neytral `hairline` rangida — band vaqt
+                // dilimlaridan farqlanib turadi, ammo diqqatni tortmaydi.
+                { id: "free", label: "Bo'sh vaqt", value: routineTimeStats.freeMin, color: colors.hairline },
+            ].filter((d) => d.value > 0),
+        [routineTimeStats]
+    );
+
+    const habitPieData = useMemo(
+        () => habitTimeBreakdown.map((h) => ({ id: h.id, label: h.title, value: h.duration, color: h.color })),
+        [habitTimeBreakdown]
+    );
 
     const anyLoading = routineLoading || weeksLoading || missionsLoading;
     const anyError = routineError || weeksError || missionsError;
@@ -675,6 +852,47 @@ const Statistics = () => {
                                 </>
                             )}
                         </SectionCard>
+
+                        <SectionWrapper>
+                            {routineTimeStats.occupiedMin > 0 && (
+                                <SectionCard>
+                                    <SectionHead>
+                                        <div>
+                                            <SectionTitle>
+                                                <Target size={16} color={colors.amber} />
+                                                Kunlik vaqt taqsimoti
+                                            </SectionTitle>
+                                            <SectionCaption>
+                                                Bugungi odatlar 24 soatning qancha qismini egallaydi — jami{" "}
+                                                {fmtDuration(routineTimeStats.occupiedMin)} ({routineTimeStats.occupiedPct}%)
+                                            </SectionCaption>
+                                        </div>
+                                    </SectionHead>
+
+                                    <PieRow>
+                                        <PieChart data={priorityPieData} />
+                                    </PieRow>
+                                </SectionCard>
+                            )}
+
+                            {habitPieData.length > 0 && (
+                                <SectionCard>
+                                    <SectionHead>
+                                        <div>
+                                            <SectionTitle>
+                                                <Mountain size={16} color={colors.amber} />
+                                                Eng ko'p vaqt oluvchi odatlar
+                                            </SectionTitle>
+                                            <SectionCaption>Bugungi band vaqt ichida qaysi odat qancha ulush oladi</SectionCaption>
+                                        </div>
+                                    </SectionHead>
+
+                                    <PieRow>
+                                        <PieChart data={habitPieData} />
+                                    </PieRow>
+                                </SectionCard>
+                            )}
+                        </SectionWrapper>
 
                         {insights.length > 0 && (
                             <SectionCard>

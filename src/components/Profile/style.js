@@ -80,8 +80,8 @@ export const StatusText = styled.div`
 
 export const ErrorBanner = styled.div`
     background: ${colors.dangerSoft};
-    color: #f0a99e;
-    border: 1px solid rgba(200, 92, 78, 0.35);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;
@@ -90,8 +90,8 @@ export const ErrorBanner = styled.div`
 
 export const SuccessBanner = styled.div`
     background: ${colors.successSoft};
-    color: #8fd6b3;
-    border: 1px solid rgba(58, 168, 114, 0.35);
+    color: ${tokens.colors.success};
+    border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 13px;
@@ -143,7 +143,7 @@ export const AvatarCircle = styled.div`
     font-size: 24px;
     font-weight: 700;
     flex-shrink: 0;
-    border: 1px solid rgba(231, 169, 76, 0.35);
+    border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
 `;
 
 export const IdentityBody = styled.div`
@@ -314,7 +314,7 @@ export const SaveBtn = styled.button`
 
 export const DangerZone = styled.div`
     background: ${colors.dangerSoft};
-    border: 1px solid rgba(200, 92, 78, 0.3);
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
     border-radius: ${tokens.radius.lg};
     padding: 20px 24px;
     display: flex;
@@ -326,7 +326,7 @@ export const DangerZone = styled.div`
 
 export const DangerText = styled.div`
     font-size: 13px;
-    color: #f0a99e;
+    color: ${tokens.colors.danger};
     max-width: 380px;
     line-height: 1.6;
 `;
@@ -335,7 +335,7 @@ export const LogoutBtn = styled.button`
     padding: 10px 20px;
     background: transparent;
     color: ${colors.danger};
-    border: 1px solid rgba(200, 92, 78, 0.5);
+    border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
     border-radius: 8px;
     font-size: 13.5px;
     font-weight: 600;
@@ -348,7 +348,7 @@ export const LogoutBtn = styled.button`
     transition: all 0.15s;
 
     &:hover {
-        background: rgba(200, 92, 78, 0.12);
+        background: color-mix(in srgb, var(--danger) 12%, transparent);
     }
 `;
 
@@ -417,6 +417,6 @@ export const TelegramDisconnectBtn = styled.button`
 
     &:hover {
         color: ${colors.danger};
-        border-color: rgba(200, 92, 78, 0.5);
+        border-color: color-mix(in srgb, var(--danger) 50%, transparent);
     }
 `;

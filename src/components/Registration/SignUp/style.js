@@ -155,8 +155,8 @@ export const ErrorText = styled.p`
 
 export const ErrorBanner = styled.div`
     background: ${colors.dangerSoft};
-    color: #f0a99e;
-    border: 1px solid rgba(200, 92, 78, 0.3);
+    color: ${tokens.colors.danger};
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
     border-radius: ${tokens.radius.sm};
     padding: 10px 12px;
     font-size: 13px;
