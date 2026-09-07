@@ -215,14 +215,26 @@ export const CountBadge = styled.span`
 
 export const SectionBody = styled.div`
     padding: 8px 16px 16px;
-      ${({ prop }) => {
-        switch (prop) {
-            case 'scroll':
-                return { overflow: 'scroll' }
-            default: return { overflow: "hidden" }
-        }
+    max-height: 520px;
+    overflow-y: auto;
 
-    }}
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: ${colors.border};
+        border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: ${colors.primary};
+    }
+
+    @media (max-width: 560px) {
+        max-height: 340px;
+    }
 `;
 
 export const Row = styled.div`

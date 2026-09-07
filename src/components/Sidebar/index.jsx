@@ -19,7 +19,7 @@ import {
 import { useUser } from "../../context/users";
 import { useTheme } from "../../context/theme";
 import { useNotifications } from "../../context/notifications";
-import { Shell, Aside, Overlay, MobileTopBar, HamburgerBtn, MobileTopBarTitle, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty,} from "./style";
+import { Shell, Aside, Overlay, MobileTopBar, HamburgerBtn, MobileTopBarTitle, LogoBlock, LogoRow, LogoIcon, LogoTextBlock, LogoTitle, LogoSubtitle, Nav, NavSectionWrap, NavSectionLabel, NavItem, BottomBlock, UserRow, UserAvatar, UserInfo, UserName, UserPlan, BottomBtn, Main, colors, NotifPanel, NotifHeader, NotifHeaderTitle, NotifMarkRead, NotifList, NotifItem, NotifDot, NotifBody, NotifTitle, NotifDesc, NotifTime, NotifEmpty, } from "./style";
 import TartibOSLogo from "../../assets/icons/TartibOS1.png"
 const homeNav = [
     { path: "/dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
@@ -98,7 +98,7 @@ function Sidebar() {
                 <LogoBlock>
                     <LogoRow>
                         <LogoIcon>
-                            <img width="100%" style={{overflow: "hidden", borderRadius: "8px"}} src={TartibOSLogo} alt="TartibOS" />
+                            <img width="100%" style={{ overflow: "hidden", borderRadius: "8px" }} src={TartibOSLogo} alt="TartibOS" />
                         </LogoIcon>
                         <LogoTextBlock>
                             <LogoTitle>TartibOS</LogoTitle>
@@ -154,7 +154,7 @@ function Sidebar() {
                 </Nav>
 
                 <BottomBlock>
-                    <Popover content={notifPanel} trigger="click" placement="topLeft" arrow={false}>
+                    <Popover content={notifPanel} trigger="click" placement="topLeft" arrow={false} zIndex={1300}>
                         <BottomBtn type="button">
                             <Badge dot={unreadCount > 0} offset={[-2, 2]}>
                                 <Bell size={15} />

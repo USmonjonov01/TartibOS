@@ -400,7 +400,7 @@ const Statistics = () => {
     // ichida yo'q edi, shuning uchun fill "undefined" bo'lib, brauzer uni
     // qora rangga standartlashtirib qo'ygan (ekrandagi katta qora dilim —
     // aynan shu bug edi). Endi mavjud `colors.textMuted` ishlatiladi.
-    const HABIT_CHART_COLORS = [colors.primary, colors.steelPast, colors.success, colors.amberStrong];
+    const HABIT_CHART_COLORS = [colors.amber, colors.steelPast, colors.success, colors.amberStrong];
 
     const habitTimeBreakdown = useMemo(() => {
         const withDuration = todayRoutines
