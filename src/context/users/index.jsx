@@ -42,10 +42,27 @@ export const UserProvider = ({ children }) => {
                         dispatch({ type: "AUTH_SUCCESS", payload: data.user });
                     }
                 })
-                .catch(() => {
-                    clearSession();
-                    dispatch({ type: "AUTH_LOGOUT" });
-                });
+                .catch((error) => {
+  const status = error.response?.status;
+
+  if (status === 401) {
+    clearSession();
+    dispatch({ type: "AUTH_LOGOUT" });
+    return;
+  }
+
+  // Network / timeout / 5xx:
+  // SESSIONNI O'CHIRMAYMIZ
+  console.error("Auth check failed:", error);
+
+  dispatch({
+    type: "AUTH_ERROR",
+    payload: {
+      type: "server",
+      message: "Server bilan aloqa vaqtincha mavjud emas."
+    }
+  });
+});
         }
     }, []);
 

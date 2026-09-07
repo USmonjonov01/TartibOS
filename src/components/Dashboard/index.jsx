@@ -351,7 +351,7 @@ const Dashboard = () => {
             prev.map((m) => (m.id === mission.id ? { ...m, completed: nextCompleted } : m))
         );
         try {
-            await missionApi.put(`/Mission/${mission.id}`, { ...mission, completed: nextCompleted });
+            await missionApi.put(`/mission/${mission.id}`, { ...mission, completed: nextCompleted });
             if (nextCompleted) notifyMissionCompleted(mission);
         } catch {
             // server bilan sinxronlash muvaffaqiyatsiz bo'lsa, holatni ortga qaytaramiz
