@@ -21,6 +21,7 @@ const TYPE_META = {
     "habit-missed": { antType: "warning", title: "⌛ Odat muddati o'tdi" },
     "level-up-day": { antType: "success", title: "🏆 Level Up!" },
     "level-up-week": { antType: "success", title: "🏆 Level Up!" },
+    "level-up-goal": { antType: "success", title: "🏔️ Level Up!" },
 };
 
 // NotificationsProvider — ilovadagi "voqea"larga asoslangan bildirishnomalar:
@@ -204,6 +205,22 @@ export const NotificationsProvider = ({ children }) => {
         [pushNotification, user]
     );
 
+    // Goal-asosidagi Level tizimi uchun — bosqich bajarilib, level oshganda
+    // GoalProvider shuni chaqiradi. dedupeKey level raqamiga bog'langan,
+    // shuning uchun bitta level uchun bildirishnoma faqat bir marta chiqadi.
+    const notifyGoalLevelUp = useCallback(
+        (newLevel, stageLabel) => {
+            if (!user) return;
+            pushNotification("level-up-goal", {
+                description: stageLabel
+                    ? `Level ${newLevel} — ${stageLabel}`
+                    : `Siz endi Level ${newLevel} dasiz!`,
+                dedupeKey: `level-up-goal:${user.id}:${newLevel}`,
+            });
+        },
+        [pushNotification, user]
+    );
+
     const markAllRead = useCallback(() => {
         setHistory((prev) => {
             const next = prev.map((n) => ({ ...n, read: true }));
@@ -215,8 +232,8 @@ export const NotificationsProvider = ({ children }) => {
     const unreadCount = useMemo(() => history.filter((n) => !n.read).length, [history]);
 
     const value = useMemo(
-        () => ({ history, unreadCount, markAllRead, notifyMissionCompleted }),
-        [history, unreadCount, markAllRead, notifyMissionCompleted]
+        () => ({ history, unreadCount, markAllRead, notifyMissionCompleted, notifyGoalLevelUp }),
+        [history, unreadCount, markAllRead, notifyMissionCompleted, notifyGoalLevelUp]
     );
 
     return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

@@ -40,4 +40,13 @@ export const dailyReviewApi = axios.create({
 attachAuthInterceptor(dailyReviewApi);
 attachNetworkNotifier(dailyReviewApi, "Kunlik xulosa");
 
+// Maqsadlar (Goal) va Yo'l xaritasi bosqichlari uchun
+export const goalApi = axios.create({
+    baseURL: import.meta.env.VITE_API_GOALS,
+});
+attachAuthInterceptor(goalApi);
+attachNetworkNotifier(goalApi, (config) =>
+    (config.url || "").includes("/steps") ? "Bosqich" : "Maqsad"
+);
+
 export default authApi;

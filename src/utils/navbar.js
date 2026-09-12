@@ -1,5 +1,6 @@
 import Dashboard from "../components/Dashboard"
 import History from "../components/History"
+import Roadmap from "../components/Roadmap"
 import Missions from "../components/Missions"
 import Profile from "../components/Profile"
 import Review from "../components/Review"
@@ -56,6 +57,13 @@ const Data = [
         title: "History",
         path: "/history",
         element: History
+    },
+
+    {
+        id: 9,
+        title: "Roadmap",
+        path: "/roadmap",
+        element: Roadmap
     }
 ]
 

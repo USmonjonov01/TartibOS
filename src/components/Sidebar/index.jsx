@@ -15,6 +15,7 @@ import {
     Menu,
     Sun,
     Moon,
+    Mountain,
 } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useTheme } from "../../context/theme";
@@ -31,6 +32,7 @@ const planNav = [
 ];
 
 const progressNav = [
+    { path: "/roadmap", label: "Yo'l xaritasi", icon: Mountain },
     { path: "/statistics", label: "Taraqqiyot", icon: BarChart2 },
     { path: "/history", label: "Tarix", icon: CalendarClock },
     { path: "/review", label: "Sharh", icon: FileText },

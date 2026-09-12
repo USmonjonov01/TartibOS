@@ -11,6 +11,7 @@ import { RoutineProvider } from './context/routine'
 import { WeeksProvider } from './context/weaks'
 import { MessagesProvider } from './context/messages'
 import { NotificationsProvider } from './context/notifications'
+import { GoalProvider } from './context/goals'
 
 // ThemeContext'dagi joriy rejimni (light/dark) o'qib, antd'ning ConfigProvider
 // theme'ini shunga moslab qayta hisoblaydi — foydalanuvchi rejimni almashtirganda
@@ -28,7 +29,9 @@ function ThemedApp() {
               <WeeksProvider>
                 <MessagesProvider>
                   <NotificationsProvider>
-                    <Root />
+                    <GoalProvider>
+                      <Root />
+                    </GoalProvider>
                   </NotificationsProvider>
                 </MessagesProvider>
               </WeeksProvider>

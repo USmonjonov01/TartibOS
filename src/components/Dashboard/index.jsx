@@ -89,6 +89,7 @@ import {
     ScoreStarsRow,
     colors,
 } from "./style";
+import LevelCard from "../LevelCard";
 
 const PRIORITY_COLORS = {
     yuqori: colors.danger,
@@ -422,6 +423,8 @@ const Dashboard = () => {
                     {greeting}, {user?.ism?.split(" ")[0] || "Foydalanuvchi"} 👋
                 </Greeting>
             </HeaderBlock>
+
+            <LevelCard/>
 
             {anyError && (
                 <ErrorBanner>
