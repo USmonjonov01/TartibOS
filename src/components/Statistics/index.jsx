@@ -18,6 +18,7 @@ import {
     getMissionStatsTotal,
     getMissionPriorityBreakdown,
     getWeeklyTrend,
+    getDayPct,
 } from "../../utils/stats";
 import {
     Wrapper,
@@ -324,8 +325,8 @@ const Statistics = () => {
 
     const totalHabitsCount = useMemo(() => dedupeRoutines(routines).length, [routines]);
 
-    const currentPct = useMemo(() => getWeekAvgPct(currentWeek, totalHabitsCount), [currentWeek, totalHabitsCount]);
-    const previousPct = useMemo(() => getWeekAvgPct(previousWeek, totalHabitsCount), [previousWeek, totalHabitsCount]);
+    const currentPct = useMemo(() => getWeekAvgPct(currentWeek, routines), [currentWeek, routines]);
+    const previousPct = useMemo(() => getWeekAvgPct(previousWeek, routines), [previousWeek, routines]);
     const overallDelta = currentPct !== null && previousPct !== null ? currentPct - previousPct : null;
 
     const trackedCurrent = getTrackedDaysCount(currentWeek);
@@ -352,7 +353,7 @@ const Statistics = () => {
     );
     const strongestHabit = useMemo(() => trackedHabitRates[0] || null, [trackedHabitRates]);
 
-    const weeklyTrend = useMemo(() => getWeeklyTrend(weeks, totalHabitsCount, 8), [weeks, totalHabitsCount]);
+    const weeklyTrend = useMemo(() => getWeeklyTrend(weeks, routines, 8), [weeks, routines]);
     const priorityBreakdown = useMemo(() => getMissionPriorityBreakdown(missions), [missions]);
 
     // --- Routine vaqt taqsimoti: bugun faol odatlar 24 soatning qancha
@@ -729,12 +730,8 @@ const Statistics = () => {
                                     <DayChartRow>
                                         {DAY_ORDER.map((dayKey) => {
                                             const statuses = currentWeek?.statuses || {};
-                                            const executions = currentWeek?.executions?.[dayKey];
                                             const hasData = statuses[dayKey] !== undefined;
-                                            const pct =
-                                                hasData && totalHabitsCount > 0
-                                                    ? Math.min(100, Math.round((executions / totalHabitsCount) * 100))
-                                                    : 0;
+                                            const pct = getDayPct(routines, currentWeek, dayKey) || 0;
                                             const isToday = dayKey === todayKey;
                                             return (
                                                 <DayCol key={dayKey}>

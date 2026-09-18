@@ -6,8 +6,10 @@ import {
     XCircle,
     AlertCircle,
     Clock,
+    Clock3,
     ArrowRight,
     TrendingUp,
+    AlertTriangle,
     Flame,
     Star,
 } from "lucide-react";
@@ -18,7 +20,8 @@ import { useNotifications } from "../../context/notifications";
 import Loader from "../Loader";
 import DayTimeline from "../DayTimeline";
 import { missionApi } from "../../axios";
-import { getTodayHabits, dedupeRoutines, habitKey } from "../../utils/routine";
+import { getTodayHabits, habitKey } from "../../utils/routine";
+import { getDayPct, getWeekAvgPct } from "../../utils/stats";
 import { DAY_ORDER, DAY_LABELS_UZ, getDayKey, getDateStr, getISOWeekId } from "../../utils/date";
 import {
     Wrapper,
@@ -87,9 +90,12 @@ import {
     RatingStarBtn,
     RatingHint,
     ScoreStarsRow,
+    InsightActionBtn,
     colors,
 } from "./style";
-import LevelCard from "../LevelCard";
+import { tokens } from "../../theme/tokens";
+import GoalStatsRow from "./GoalStatsRow";
+
 
 const PRIORITY_COLORS = {
     yuqori: colors.danger,
@@ -166,13 +172,54 @@ const Dashboard = () => {
     const todayKey = useMemo(() => getDayKey(now), [now]);
 
     const todayHabits = useMemo(() => getTodayHabits(routines, now), [routines, now]);
-    const totalHabitsCount = useMemo(() => dedupeRoutines(routines).length, [routines]);
+    // (totalHabitsCount olib tashlandi — endi haftalik % kunlik getDayPct orqali,
+    // shu kunga rejalashtirilgan odatlar soniga qarab hisoblanadi)
 
     const currentWeekId = useMemo(() => getISOWeekId(now), [now]);
     const currentWeek = useMemo(
         () => weeks.find((w) => w.weekId === currentWeekId),
         [weeks, currentWeekId]
     );
+
+    // "Haftalik solishtiruv" widget'i uchun — o'tgan haftaning shu kungacha bo'lgan yozuvi
+    const previousWeekId = useMemo(
+        () => getISOWeekId(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)),
+        [now]
+    );
+    const previousWeek = useMemo(
+        () => weeks.find((w) => w.weekId === previousWeekId),
+        [weeks, previousWeekId]
+    );
+    const currentWeekPct = useMemo(() => getWeekAvgPct(currentWeek, routines), [currentWeek, routines]);
+    const previousWeekPct = useMemo(() => getWeekAvgPct(previousWeek, routines), [previousWeek, routines]);
+
+    // "Eng past natijali kun" widget'i uchun — barcha yuklangan haftalar bo'yicha
+    // har bir hafta kuni (Du..Ya) uchun o'rtacha % hisoblanadi, eng pasti tanlanadi.
+    // Kamida bitta haqiqiy ma'lumot nuqtasi bo'lgan kunlargina hisobga olinadi.
+    const weakestDay = useMemo(() => {
+        const sums = {};
+        const counts = {};
+        DAY_ORDER.forEach((dayKey) => {
+            weeks.forEach((week) => {
+                const pct = getDayPct(routines, week, dayKey);
+                if (pct === null) return;
+                sums[dayKey] = (sums[dayKey] || 0) + pct;
+                counts[dayKey] = (counts[dayKey] || 0) + 1;
+            });
+        });
+        let worstKey = null;
+        let worstAvg = Infinity;
+        DAY_ORDER.forEach((dayKey, i) => {
+            if (!counts[dayKey]) return;
+            const avg = Math.round(sums[dayKey] / counts[dayKey]);
+            if (avg < worstAvg) {
+                worstAvg = avg;
+                worstKey = dayKey;
+            }
+        });
+        if (!worstKey) return null;
+        return { label: DAY_LABELS_UZ[DAY_ORDER.indexOf(worstKey)], pct: worstAvg };
+    }, [weeks, routines]);
 
     // Ketma-ket bosishlarda ikki marta yangi hafta yozuvi yaratilib qolmasligi
     // uchun so'rovlarni navbatga qo'yamiz va har doim eng so'nggi week holatidan foydalanamiz.
@@ -219,42 +266,59 @@ const Dashboard = () => {
         ? Math.round((completedHabits / todayHabits.length) * 100)
         : 0;
 
+    // MUHIM TUZATISH: avvalgi versiyada diff (habitIds/reasons/scores) CHAQIRISH
+    // PAYTIDA, navbatga qo'yishdan OLDIN hisoblanardi. Agar foydalanuvchi ikkita
+    // turli odatni tez ketma-ket baholasa (masalan bir nechta yulduzchani birin-
+    // ketin bossa), ikkinchisining diff'i BIRINCHISINING natijasi serverga
+    // yetib bormasdan turib, ESKI ma'lumotdan hisoblanib qolar edi — va serverga
+    // yozilganda birinchi o'zgarishni "yo'qotib qo'yardi" (real xato — reyting
+    // yo'qolishi va status almashib qolishi shundan edi).
+    //
+    // Endi diff FAQAT navbatdagi TASK ichida, aynan shu vazifa bajarilish
+    // vaqtida hisoblanadi — shu payt currentWeekRef.current allaqachon oldingi
+    // barcha saqlashlarning natijasini o'zida tutadi (har bir saqlash tugashi
+    // bilan darhol yangilanadi, React qayta render qilishini kutmasdan).
+    //
+    // Bundan tashqari, "pendingHabitKey bo'lsa hech narsa qilma" degan eski
+    // qoida OLIB TASHLANDI — u boshqa odatni bosishni butunlay e'tiborsiz
+    // qoldirar edi (click "yo'qolar" edi, hech qanday xato ko'rsatmasdan).
+    // Endi har bir bosish navbatga albatta qo'shiladi, faqat ketma-ket, to'g'ri
+    // tartibda bajariladi.
     const applyHabitStateChange = useCallback(
         ({ habit, newState, note, score }) => {
             const key = habitKey(habit);
-            if (pendingHabitKey) return;
-
-            const existing = new Set(currentWeekRef.current?.completions?.[todayKey] || []);
-            if (newState === "done") existing.add(key);
-            else existing.delete(key);
-            const habitIds = Array.from(existing);
-
-            const currentReasons = currentWeekRef.current?.reasons || {};
-            const dayReasons = { ...(currentReasons[todayKey] || {}) };
-            if (newState === "missed") {
-                dayReasons[key] = { status: "missed" };
-            } else if (newState === "excused") {
-                dayReasons[key] = { status: "excused", note: note || "" };
-            } else {
-                delete dayReasons[key];
-            }
-            const nextReasons = { ...currentReasons, [todayKey]: dayReasons };
-
-            // Ball faqat "bajarildi" holati uchun saqlanadi — boshqa holatlarda tozalanadi
-            const currentScores = currentWeekRef.current?.scores || {};
-            const dayScores = { ...(currentScores[todayKey] || {}) };
-            if (newState === "done" && typeof score === "number") {
-                dayScores[key] = score;
-            } else {
-                delete dayScores[key];
-            }
-            const nextScores = { ...currentScores, [todayKey]: dayScores };
 
             setHabitSyncError(null);
             setPendingHabitKey(key);
 
-            const task = () =>
-                saveDayCompletion({
+            const task = () => {
+                const existing = new Set(currentWeekRef.current?.completions?.[todayKey] || []);
+                if (newState === "done") existing.add(key);
+                else existing.delete(key);
+                const habitIds = Array.from(existing);
+
+                const currentReasons = currentWeekRef.current?.reasons || {};
+                const dayReasons = { ...(currentReasons[todayKey] || {}) };
+                if (newState === "missed") {
+                    dayReasons[key] = { status: "missed" };
+                } else if (newState === "excused") {
+                    dayReasons[key] = { status: "excused", note: note || "" };
+                } else {
+                    delete dayReasons[key];
+                }
+                const nextReasons = { ...currentReasons, [todayKey]: dayReasons };
+
+                // Ball faqat "bajarildi" holati uchun saqlanadi — boshqa holatlarda tozalanadi
+                const currentScores = currentWeekRef.current?.scores || {};
+                const dayScores = { ...(currentScores[todayKey] || {}) };
+                if (newState === "done" && typeof score === "number") {
+                    dayScores[key] = score;
+                } else {
+                    delete dayScores[key];
+                }
+                const nextScores = { ...currentScores, [todayKey]: dayScores };
+
+                return saveDayCompletion({
                     week: currentWeekRef.current,
                     weekId: currentWeekId,
                     dayKey: todayKey,
@@ -263,20 +327,27 @@ const Dashboard = () => {
                     reasons: nextReasons,
                     totalHabits: todayHabits.length,
                 })
+                    .then((updatedWeek) => {
+                        // Navbatdagi keyingi task to'g'ri ma'lumotdan boshlashi uchun,
+                        // ref'ni DARHOL (React render kutmasdan) yangilaymiz.
+                        if (updatedWeek) currentWeekRef.current = updatedWeek;
+                    })
                     .catch((err) => {
                         setHabitSyncError(
                             err.response?.data?.message || err.message || "Odat holatini saqlashda xatolik"
                         );
                     })
-                    .finally(() => setPendingHabitKey(null));
+                    .finally(() => {
+                        setPendingHabitKey((prev) => (prev === key ? null : prev));
+                    });
+            };
 
             saveQueueRef.current = saveQueueRef.current.then(task, task);
         },
-        [pendingHabitKey, todayKey, currentWeekId, todayHabits.length, saveDayCompletion]
+        [todayKey, currentWeekId, todayHabits.length, saveDayCompletion]
     );
 
     const handleHabitClick = (habit) => {
-        if (pendingHabitKey) return;
         const current = getHabitState(habit);
         const next = nextHabitState(current);
         if (next === "excused") {
@@ -330,6 +401,7 @@ const Dashboard = () => {
                 start: h.start,
                 end: h.end,
                 state: getHabitState(h) || "pending",
+                type: "habit",
             }));
 
         const missionItems = todayMissions
@@ -341,10 +413,49 @@ const Dashboard = () => {
                 start: m.start,
                 end: m.end,
                 state: m.completed ? "done" : "pending",
+                type: "mission",
             }));
 
         return [...habitItems, ...missionItems];
     }, [todayHabits, todayMissions, getHabitState]);
+
+    // "Navbatdagi ish" widget'i uchun — hozir davom etayotgan (agar bor bo'lsa)
+    // yoki eng yaqin kelayotgan bajarilmagan band. Faqat vaqti belgilangan va
+    // hali "pending" holatidagi bandlar orasidan tanlanadi.
+    const toMin = (hhmm) => {
+        if (!hhmm || !hhmm.includes(":")) return null;
+        const [h, m] = hhmm.split(":").map(Number);
+        return Number.isNaN(h) || Number.isNaN(m) ? null : h * 60 + m;
+    };
+    const nextUpItem = useMemo(() => {
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const candidates = timelineItems
+            .filter((it) => it.state === "pending")
+            .map((it) => ({ ...it, startMin: toMin(it.start), endMin: toMin(it.end) }))
+            .filter((it) => it.startMin !== null);
+
+        const active = candidates.find(
+            (it) => it.startMin <= nowMin && (it.endMin === null || nowMin < it.endMin)
+        );
+        if (active) return { ...active, isNow: true };
+
+        const upcoming = candidates
+            .filter((it) => it.startMin > nowMin)
+            .sort((a, b) => a.startMin - b.startMin)[0];
+        return upcoming ? { ...upcoming, isNow: false } : null;
+    }, [timelineItems, now]);
+
+    const nextUpHabit = useMemo(() => {
+        if (!nextUpItem || nextUpItem.type !== "habit") return null;
+        const rawId = nextUpItem.id.replace(/^habit-/, "");
+        return todayHabits.find((h) => String(h.id) === rawId) || null;
+    }, [nextUpItem, todayHabits]);
+
+    const nextUpMission = useMemo(() => {
+        if (!nextUpItem || nextUpItem.type !== "mission") return null;
+        const rawId = nextUpItem.id.replace(/^mission-/, "");
+        return todayMissions.find((m) => String(m.id) === rawId) || null;
+    }, [nextUpItem, todayMissions]);
 
     const toggleMission = async (mission) => {
         const nextCompleted = !mission.completed;
@@ -366,9 +477,7 @@ const Dashboard = () => {
         return DAY_ORDER.map((dayKey, i) => {
             const executions = currentWeek?.executions?.[dayKey];
             const hasData = executions !== undefined;
-            const pct = hasData && totalHabitsCount > 0
-                ? Math.min(100, Math.round((executions / totalHabitsCount) * 100))
-                : 0;
+            const pct = getDayPct(routines, currentWeek, dayKey);
             return {
                 dayKey,
                 label: DAY_LABELS_UZ[i],
@@ -376,7 +485,7 @@ const Dashboard = () => {
                 hasData,
             };
         });
-    }, [currentWeek, totalHabitsCount]);
+    }, [currentWeek, routines]);
 
     const trackedDays = weeklyBars.filter((b) => b.hasData);
     const weeklyAvg = trackedDays.length > 0
@@ -414,354 +523,424 @@ const Dashboard = () => {
 
     return (
         <>
-        <Wrapper>
-            <HeaderBlock>
-                <DateLabel>
-                    {dayName.charAt(0).toUpperCase() + dayName.slice(1)}, {dateStr}
-                </DateLabel>
-                <Greeting>
-                    {greeting}, {user?.ism?.split(" ")[0] || "Foydalanuvchi"} 👋
-                </Greeting>
-            </HeaderBlock>
+            <Wrapper>
+                <HeaderBlock>
+                    <div>
+                        <DateLabel>
+                            {dayName.charAt(0).toUpperCase() + dayName.slice(1)}, {dateStr}
+                        </DateLabel>
+                        <Greeting>
+                            {greeting}, {user?.ism?.split(" ")[0] || "Foydalanuvchi"} 👋
+                        </Greeting>
+                    </div>
+                    <GoalStatsRow
+                        streakDays={streakDays}
+                        missionsCompleted={completedMissions}
+                        missionsTotal={todayMissions.length}
+                    />
+                </HeaderBlock>
 
-            <LevelCard/>
 
-            {anyError && (
-                <ErrorBanner>
-                    Ma'lumotlarni yuklashda xatolik yuz berdi: {anyError}
-                </ErrorBanner>
-            )}
 
-            {anyLoading && todayHabits.length === 0 && todayMissions.length === 0 ? (
-                <Loader progress={loadProgress} />
-            ) : (
-                <>
-                    <TopGrid>
-                        <DisciplineCardWrap>
-                            <DisciplineRing score={disciplineScore} />
-                            <div>
-                                <DisciplineLabel>BUGUNGI INTIZOM</DisciplineLabel>
-                                <DisciplineValue>
-                                    {completedHabits} / {todayHabits.length}
-                                </DisciplineValue>
-                                <DisciplineSub $done={todayHabits.length > 0 && completedHabits === todayHabits.length}>
-                                    {todayHabits.length === 0
-                                        ? "Bugun uchun odat topilmadi"
-                                        : completedHabits === todayHabits.length
-                                            ? "✓ Hammasi bajarildi!"
-                                            : `${todayHabits.length - completedHabits} ta odat qoldi`}
-                                </DisciplineSub>
-                            </div>
-                        </DisciplineCardWrap>
+                {anyError && (
+                    <ErrorBanner>
+                        Ma'lumotlarni yuklashda xatolik yuz berdi: {anyError}
+                    </ErrorBanner>
+                )}
 
-                        <StatCardWrap>
-                            <StatHead>
-                                <StatLabel>TARTIBOS BILAN</StatLabel>
-                                <StatIconBox $bg={colors.warningLight}>
-                                    <Flame size={18} color={colors.warning} />
-                                </StatIconBox>
-                            </StatHead>
-                            <StatValue>{tenureDays !== null ? `${tenureDays} kun` : "—"}</StatValue>
-                            <StatSub $color={colors.warning}>Ro'yxatdan o'tgan kundan buyon izchil</StatSub>
-                        </StatCardWrap>
+                {anyLoading && todayHabits.length === 0 && todayMissions.length === 0 ? (
+                    <Loader progress={loadProgress} />
+                ) : (
+                    <>
+                        <TopGrid>
+                            <DisciplineCardWrap>
+                                <DisciplineRing score={disciplineScore} />
+                                <div>
+                                    <DisciplineLabel>BUGUNGI INTIZOM</DisciplineLabel>
+                                    <DisciplineValue>
+                                        {completedHabits} / {todayHabits.length}
+                                    </DisciplineValue>
+                                    <DisciplineSub $done={todayHabits.length > 0 && completedHabits === todayHabits.length}>
+                                        {todayHabits.length === 0
+                                            ? "Bugun uchun odat topilmadi"
+                                            : completedHabits === todayHabits.length
+                                                ? "✓ Hammasi bajarildi!"
+                                                : `${todayHabits.length - completedHabits} ta odat qoldi`}
+                                    </DisciplineSub>
+                                </div>
+                            </DisciplineCardWrap>
 
-                        <StatCardWrap>
-                            <StatHead>
-                                <StatLabel>MISSIYALAR (BUGUN)</StatLabel>
-                                <StatIconBox $bg={colors.accentLight}>
-                                    <Star size={18} color={colors.accent} />
-                                </StatIconBox>
-                            </StatHead>
-                            <StatValue>
-                                {completedMissions} / {todayMissions.length}
-                            </StatValue>
-                            <StatSub $color={colors.accent}>
-                                {todayMissions.length === 0
-                                    ? "Bugun uchun missiya yo'q"
-                                    : completedMissions === todayMissions.length
-                                        ? "Hammasi bajarildi!"
-                                        : `${todayMissions.length - completedMissions} ta qoldi`}
-                            </StatSub>
-                        </StatCardWrap>
-                    </TopGrid>
-
-                    <MainGrid>
-                        <Col >
-                            <SectionCard>
-                                <SectionHeader>
-                                    <div>
-                                        <SectionTitle>Fundamental odatlar</SectionTitle>
-                                        <SectionSubtitle>Kundalik tizim asosi</SectionSubtitle>
-                                    </div>
-                                    <CountBadge $bg={colors.primaryLight} $color={colors.primary}>
-                                        {completedHabits}/{todayHabits.length}
-                                    </CountBadge>
-                                </SectionHeader>
-                                {todayHabits.length > 0 && (
-                                    <HabitLegendRow>
-                                        <HabitLegendItem>
-                                            <HabitLegendDot $bg={colors.successLight} $border={colors.success}>✓</HabitLegendDot>
-                                            Bajarildi
-                                        </HabitLegendItem>
-                                        <HabitLegendItem>
-                                            <HabitLegendDot $bg={colors.dangerLight} $border={colors.danger}>✗</HabitLegendDot>
-                                            Bajarilmadi
-                                        </HabitLegendItem>
-                                        <HabitLegendItem>
-                                            <HabitLegendDot $bg={colors.warningLight} $border={colors.warning}>!</HabitLegendDot>
-                                            Sababli
-                                        </HabitLegendItem>
-                                    </HabitLegendRow>
+                            <StatCardWrap>
+                                <StatHead>
+                                    <StatLabel>NAVBATDAGI ISH</StatLabel>
+                                    <StatIconBox $bg={tokens.colors.amberSoft}>
+                                        <Clock3 size={18} color={tokens.colors.amber} />
+                                    </StatIconBox>
+                                </StatHead>
+                                <StatValue style={{ fontSize: 17 }}>
+                                    {nextUpItem
+                                        ? `${nextUpItem.icon ? nextUpItem.icon + " " : ""}${nextUpItem.title}`
+                                        : "Reja tugadi"}
+                                </StatValue>
+                                <StatSub $color={colors.textMuted}>
+                                    {nextUpItem
+                                        ? `${nextUpItem.isNow ? "Hozir · " : ""}${nextUpItem.start}${nextUpItem.end ? "–" + nextUpItem.end : ""}`
+                                        : "Barcha rejalashtirilgan ishlar yakunlandi"}
+                                </StatSub>
+                                {(nextUpHabit || nextUpMission) && (
+                                    <InsightActionBtn
+                                        style={{ marginTop: 10, alignSelf: "flex-start" }}
+                                        onClick={() =>
+                                            nextUpHabit ? handleHabitClick(nextUpHabit) : toggleMission(nextUpMission)
+                                        }
+                                    >
+                                        {nextUpHabit ? "Belgilash" : "Bajarildi"}
+                                    </InsightActionBtn>
                                 )}
-                                <SectionBody prop="scroll">
-                                    {todayHabits.length === 0 ? (
-                                        <EmptyState>
-                                            <EmptyIcon>✦</EmptyIcon>
-                                            <EmptyTitle>Bugun uchun odat yo'q</EmptyTitle>
-                                            <EmptySub>Routine bo'limidan odat qo'shing</EmptySub>
-                                        </EmptyState>
-                                    ) : (
-                                        todayHabits.map((habit) => {
-                                            const state = getHabitState(habit);
-                                            const score = getHabitScore(habit);
-                                            const isPending = pendingHabitKey === habitKey(habit);
-                                            const todayPlan = habit.dayPlans?.[todayKey];
-                                            return (
+                            </StatCardWrap>
+
+                            <StatCardWrap>
+                                <StatHead>
+                                    <StatLabel>HAFTALIK O'ZGARISH</StatLabel>
+                                    <StatIconBox $bg={tokens.colors.amberSoft}>
+                                        <TrendingUp size={18} color={tokens.colors.amber} />
+                                    </StatIconBox>
+                                </StatHead>
+                                <StatValue>{currentWeekPct !== null ? `${currentWeekPct}%` : "—"}</StatValue>
+                                <StatSub
+                                    $color={
+                                        currentWeekPct !== null && previousWeekPct !== null
+                                            ? currentWeekPct >= previousWeekPct
+                                                ? colors.success
+                                                : colors.danger
+                                            : colors.textMuted
+                                    }
+                                >
+                                    {currentWeekPct !== null && previousWeekPct !== null
+                                        ? `O'tgan haftaga nisbatan ${currentWeekPct >= previousWeekPct ? "+" : ""}${currentWeekPct - previousWeekPct}%`
+                                        : "Hali ma'lumot yo'q"}
+                                </StatSub>
+                            </StatCardWrap>     
+                           
+                        </TopGrid>
+
+                        <MainGrid>
+                            <Col >
+                                <SectionCard>
+                                    <SectionHeader>
+                                        <div>
+                                            <SectionTitle>Fundamental odatlar</SectionTitle>
+                                            <SectionSubtitle>Kundalik tizim asosi</SectionSubtitle>
+                                        </div>
+                                        <CountBadge $bg={colors.primaryLight} $color={colors.primary}>
+                                            {completedHabits}/{todayHabits.length}
+                                        </CountBadge>
+                                    </SectionHeader>
+                                    {todayHabits.length > 0 && (
+                                        <HabitLegendRow>
+                                            <HabitLegendItem>
+                                                <HabitLegendDot $bg={colors.successLight} $border={colors.success}>✓</HabitLegendDot>
+                                                Bajarildi
+                                            </HabitLegendItem>
+                                            <HabitLegendItem>
+                                                <HabitLegendDot $bg={colors.dangerLight} $border={colors.danger}>✗</HabitLegendDot>
+                                                Bajarilmadi
+                                            </HabitLegendItem>
+                                            <HabitLegendItem>
+                                                <HabitLegendDot $bg={colors.warningLight} $border={colors.warning}>!</HabitLegendDot>
+                                                Sababli
+                                            </HabitLegendItem>
+                                        </HabitLegendRow>
+                                    )}
+                                    <SectionBody prop="scroll">
+                                        {todayHabits.length === 0 ? (
+                                            <EmptyState>
+                                                <EmptyIcon>✦</EmptyIcon>
+                                                <EmptyTitle>Bugun uchun odat yo'q</EmptyTitle>
+                                                <EmptySub>Routine bo'limidan odat qo'shing</EmptySub>
+                                            </EmptyState>
+                                        ) : (
+                                            todayHabits.map((habit) => {
+                                                const state = getHabitState(habit);
+                                                const score = getHabitScore(habit);
+                                                const isPending = pendingHabitKey === habitKey(habit);
+                                                const todayPlan = habit.dayPlans?.[todayKey];
+                                                return (
+                                                    <Row
+                                                        key={habit.id}
+                                                        $done={state !== null}
+                                                        $dim={state === "done" ? 0.65 : 0.8}
+                                                        onClick={() => handleHabitClick(habit)}
+                                                        style={isPending ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+                                                    >
+                                                        {habitStateIcon(state)}
+                                                        <RowEmoji>{habit.icon || "🕒"}</RowEmoji>
+                                                        <RowBody>
+                                                            <RowTitle $done={state === "done"}>
+                                                                {habit.title}
+                                                                {todayPlan && <TodayPlanSpan> — {todayPlan}</TodayPlanSpan>}
+                                                            </RowTitle>
+                                                        </RowBody>
+                                                        <RowMeta>
+                                                            {state === "done" && score !== null && (
+                                                                <ScoreStarsRow title={`${score}/10`}>
+                                                                    {[1, 2, 3, 4, 5].map((i) => (
+                                                                        <Star
+                                                                            key={i}
+                                                                            size={11}
+                                                                            color={colors.warning}
+                                                                            fill={i <= score / 2 ? colors.warning : "none"}
+                                                                            strokeWidth={1.5}
+                                                                        />
+                                                                    ))}
+                                                                </ScoreStarsRow>
+                                                            )}
+                                                            {habit.priority && <PriorityDot $color={priorityColor(habit.priority)} />}
+                                                            <TimeTag>
+                                                                <Clock size={12} />
+                                                                {habit.start}
+                                                            </TimeTag>
+                                                        </RowMeta>
+                                                    </Row>
+                                                );
+                                            })
+                                        )}
+                                    </SectionBody>
+                                </SectionCard>
+                            </Col>
+
+                            <Col>
+                                <SectionCard style={{ padding: "20px 24px" }}>
+                                    <WeeklyHeader>
+                                        <WeeklyTitle>Haftalik progress</WeeklyTitle>
+                                        <LegendRow>
+                                            <LegendItem>
+                                                <LegendDot $color={colors.primary} />
+                                                <span>Ijro</span>
+                                            </LegendItem>
+                                        </LegendRow>
+                                    </WeeklyHeader>
+                                    <ChartRow>
+                                        {weeklyBars.map((bar) => (
+                                            <ChartCol key={bar.dayKey}>
+                                                <BarTrack>
+                                                    <Bar $color={colors.primary} $height={(bar.pct / 100) * 80} />
+                                                </BarTrack>
+                                                <DayTag>{bar.label}</DayTag>
+                                            </ChartCol>
+                                        ))}
+                                    </ChartRow>
+                                </SectionCard>
+
+                                <InsightBox>
+                                    <InsightHead>
+                                        <TrendingUp size={16} color={colors.primary} />
+                                        <InsightLabel>TartibOS kuzatuvi</InsightLabel>
+                                    </InsightHead>
+                                    <InsightText>
+                                        {weeklyAvg === null
+                                            ? "Bu hafta uchun hali yetarli ma'lumot yo'q. Odatlaringizni belgilab boring — birinchi kuzatuv shundan keyin paydo bo'ladi."
+                                            : (
+                                                <>
+                                                    Ushbu hafta o'rtacha ijro <strong>{weeklyAvg}%</strong> ni tashkil etdi.{" "}
+                                                    {weeklyAvg >= 75
+                                                        ? "Bu ishonchli izchillik — davom ettirish o'zingiz uchun ma'qul."
+                                                        : "Mumkin bo'lgan keyingi qadam: kunning bitta bandini barqarorlashtirish."}
+                                                </>
+                                            )}
+                                    </InsightText>
+                                    <InsightLink onClick={() => navigate("/statistics")}>
+                                        To'liq tahlilni ko'rish <ArrowRight size={14} />
+                                    </InsightLink>
+                                </InsightBox>
+
+                                <SectionCard>
+                                    <SectionHeader>
+                                        <div>
+                                            <SectionTitle>Bugungi missiyalar</SectionTitle>
+                                            <SectionSubtitle>Qo'shimcha maqsadlar</SectionSubtitle>
+                                        </div>
+                                        <CountBadge $bg={colors.accentLight} $color={colors.accent}>
+                                            {completedMissions}/{todayMissions.length}
+                                        </CountBadge>
+                                    </SectionHeader>
+                                    <SectionBody>
+                                        {todayMissions.length === 0 ? (
+                                            <EmptyState>
+                                                <EmptyIcon>✦</EmptyIcon>
+                                                <EmptyTitle>Bugun missiya yo'q</EmptyTitle>
+                                                <EmptySub>Missions bo'limidan yangi missiya qo'shing</EmptySub>
+                                            </EmptyState>
+                                        ) : (
+                                            todayMissions.map((mission) => (
                                                 <Row
-                                                    key={habit.id}
-                                                    $done={state !== null}
-                                                    $dim={state === "done" ? 0.65 : 0.8}
-                                                    onClick={() => handleHabitClick(habit)}
-                                                    style={isPending ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+                                                    key={mission.id}
+                                                    $done={mission.completed}
+                                                    $dim={0.6}
+                                                    onClick={() => toggleMission(mission)}
                                                 >
-                                                    {habitStateIcon(state)}
-                                                    <RowEmoji>{habit.icon || "🕒"}</RowEmoji>
+                                                    {mission.completed ? (
+                                                        <CheckCircle2 size={18} color={colors.accent} strokeWidth={2} />
+                                                    ) : (
+                                                        <Circle size={18} color={colors.textSubtle} strokeWidth={2} />
+                                                    )}
                                                     <RowBody>
-                                                        <RowTitle $done={state === "done"}>
-                                                            {habit.title}
-                                                            {todayPlan && <TodayPlanSpan> — {todayPlan}</TodayPlanSpan>}
-                                                        </RowTitle>
+                                                        <RowTitle $done={mission.completed}>{mission.title}</RowTitle>
+                                                        {mission.notes && <RowNote>{mission.notes}</RowNote>}
                                                     </RowBody>
                                                     <RowMeta>
-                                                        {state === "done" && score !== null && (
-                                                            <ScoreStarsRow title={`${score}/10`}>
-                                                                {[1, 2, 3, 4, 5].map((i) => (
-                                                                    <Star
-                                                                        key={i}
-                                                                        size={11}
-                                                                        color={colors.warning}
-                                                                        fill={i <= score / 2 ? colors.warning : "none"}
-                                                                        strokeWidth={1.5}
-                                                                    />
-                                                                ))}
-                                                            </ScoreStarsRow>
+                                                        {mission.priority && <PriorityDot $color={priorityColor(mission.priority)} />}
+                                                        {mission.start && (
+                                                            <TimeTag>
+                                                                <Clock size={12} />
+                                                                {mission.start}
+                                                            </TimeTag>
                                                         )}
-                                                        {habit.priority && <PriorityDot $color={priorityColor(habit.priority)} />}
-                                                        <TimeTag>
-                                                            <Clock size={12} />
-                                                            {habit.start}
-                                                        </TimeTag>
                                                     </RowMeta>
                                                 </Row>
-                                            );
-                                        })
-                                    )}
-                                </SectionBody>
-                            </SectionCard>
-                        </Col>
-
-                        <Col>
-                            <SectionCard style={{ padding: "20px 24px" }}>
-                                <WeeklyHeader>
-                                    <WeeklyTitle>Haftalik progress</WeeklyTitle>
-                                    <LegendRow>
-                                        <LegendItem>
-                                            <LegendDot $color={colors.primary} />
-                                            <span>Ijro</span>
-                                        </LegendItem>
-                                    </LegendRow>
-                                </WeeklyHeader>
-                                <ChartRow>
-                                    {weeklyBars.map((bar) => (
-                                        <ChartCol key={bar.dayKey}>
-                                            <BarTrack>
-                                                <Bar $color={colors.primary} $height={(bar.pct / 100) * 80} />
-                                            </BarTrack>
-                                            <DayTag>{bar.label}</DayTag>
-                                        </ChartCol>
-                                    ))}
-                                </ChartRow>
-                            </SectionCard>
-
-                            <InsightBox>
-                                <InsightHead>
-                                    <TrendingUp size={16} color={colors.primary} />
-                                    <InsightLabel>TartibOS kuzatuvi</InsightLabel>
-                                </InsightHead>
-                                <InsightText>
-                                    {weeklyAvg === null
-                                        ? "Bu hafta uchun hali yetarli ma'lumot yo'q. Odatlaringizni belgilab boring — birinchi kuzatuv shundan keyin paydo bo'ladi."
-                                        : (
-                                            <>
-                                                Ushbu hafta o'rtacha ijro <strong>{weeklyAvg}%</strong> ni tashkil etdi.{" "}
-                                                {weeklyAvg >= 75
-                                                    ? "Bu ishonchli izchillik — davom ettirish o'zingiz uchun ma'qul."
-                                                    : "Mumkin bo'lgan keyingi qadam: kunning bitta bandini barqarorlashtirish."}
-                                            </>
+                                            ))
                                         )}
-                                </InsightText>
-                                <InsightLink onClick={() => navigate("/statistics")}>
-                                    To'liq tahlilni ko'rish <ArrowRight size={14} />
-                                </InsightLink>
-                            </InsightBox>
+                                    </SectionBody>
+                                </SectionCard>
+                            </Col>
+                        </MainGrid>
 
-                            <SectionCard>
-                                <SectionHeader>
-                                    <div>
-                                        <SectionTitle>Bugungi missiyalar</SectionTitle>
-                                        <SectionSubtitle>Qo'shimcha maqsadlar</SectionSubtitle>
-                                    </div>
-                                    <CountBadge $bg={colors.accentLight} $color={colors.accent}>
-                                        {completedMissions}/{todayMissions.length}
-                                    </CountBadge>
-                                </SectionHeader>
-                                <SectionBody>
-                                    {todayMissions.length === 0 ? (
-                                        <EmptyState>
-                                            <EmptyIcon>✦</EmptyIcon>
-                                            <EmptyTitle>Bugun missiya yo'q</EmptyTitle>
-                                            <EmptySub>Missions bo'limidan yangi missiya qo'shing</EmptySub>
-                                        </EmptyState>
-                                    ) : (
-                                        todayMissions.map((mission) => (
-                                            <Row
-                                                key={mission.id}
-                                                $done={mission.completed}
-                                                $dim={0.6}
-                                                onClick={() => toggleMission(mission)}
-                                            >
-                                                {mission.completed ? (
-                                                    <CheckCircle2 size={18} color={colors.accent} strokeWidth={2} />
-                                                ) : (
-                                                    <Circle size={18} color={colors.textSubtle} strokeWidth={2} />
-                                                )}
-                                                <RowBody>
-                                                    <RowTitle $done={mission.completed}>{mission.title}</RowTitle>
-                                                    {mission.notes && <RowNote>{mission.notes}</RowNote>}
-                                                </RowBody>
-                                                <RowMeta>
-                                                    {mission.priority && <PriorityDot $color={priorityColor(mission.priority)} />}
-                                                    {mission.start && (
-                                                        <TimeTag>
-                                                            <Clock size={12} />
-                                                            {mission.start}
-                                                        </TimeTag>
-                                                    )}
-                                                </RowMeta>
-                                            </Row>
-                                        ))
-                                    )}
-                                </SectionBody>
-                            </SectionCard>
-                        </Col>
-                    </MainGrid>
+                        <DayTimeline items={timelineItems} />
+                    </>
+                )}
+            </Wrapper>
 
-                    <DayTimeline items={timelineItems} />
-                </>
+            {reasonModal && (
+                <ModalOverlay onClick={handleReasonCancel}>
+                    <ModalBox onClick={(e) => e.stopPropagation()}>
+                        <ModalTitle>⚠️ Sababli bajarilmadi</ModalTitle>
+                        <ModalSubtitle>
+                            <strong>{reasonModal.habit.title}</strong> odati bajarilmaganining
+                            sababini izohlang (ixtiyoriy).
+                        </ModalSubtitle>
+                        <ModalTextarea
+                            autoFocus
+                            placeholder="Masalan: Kasallik tufayli, ish ko'pligi, kutilmagan holat..."
+                            value={reasonText}
+                            onChange={(e) => setReasonText(e.target.value)}
+                        />
+                        <ModalActions>
+                            <ModalBtn type="button" onClick={handleReasonCancel}>
+                                Bekor qilish
+                            </ModalBtn>
+                            <ModalBtn type="button" $primary onClick={handleReasonConfirm}>
+                                Saqlash
+                            </ModalBtn>
+                        </ModalActions>
+                    </ModalBox>
+                </ModalOverlay>
             )}
-        </Wrapper>
 
-        {reasonModal && (
-            <ModalOverlay onClick={handleReasonCancel}>
-                <ModalBox onClick={(e) => e.stopPropagation()}>
-                    <ModalTitle>⚠️ Sababli bajarilmadi</ModalTitle>
-                    <ModalSubtitle>
-                        <strong>{reasonModal.habit.title}</strong> odati bajarilmaganining
-                        sababini izohlang (ixtiyoriy).
-                    </ModalSubtitle>
-                    <ModalTextarea
-                        autoFocus
-                        placeholder="Masalan: Kasallik tufayli, ish ko'pligi, kutilmagan holat..."
-                        value={reasonText}
-                        onChange={(e) => setReasonText(e.target.value)}
-                    />
-                    <ModalActions>
-                        <ModalBtn type="button" onClick={handleReasonCancel}>
-                            Bekor qilish
-                        </ModalBtn>
-                        <ModalBtn type="button" $primary onClick={handleReasonConfirm}>
-                            Saqlash
-                        </ModalBtn>
-                    </ModalActions>
-                </ModalBox>
-            </ModalOverlay>
-        )}
-
-        {ratingModal && (
-            <ModalOverlay onClick={handleRatingCancel}>
-                <ModalBox onClick={(e) => e.stopPropagation()}>
-                    <ModalTitle>⭐ Qanday bajardingiz?</ModalTitle>
-                    <ModalSubtitle>
-                        <strong>{ratingModal.habit.title}</strong> odatini qanchalik sifatli
-                        bajarganingizni baholang.
-                    </ModalSubtitle>
-                    <RatingStarsRow onMouseLeave={() => setHoverStars(0)}>
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <RatingStarBtn
-                                key={i}
-                                type="button"
-                                onMouseEnter={() => setHoverStars(i)}
-                                onClick={() => handleRatingSelect(i)}
-                            >
-                                <Star
-                                    size={30}
-                                    color={colors.warning}
-                                    fill={i <= hoverStars ? colors.warning : "none"}
-                                    strokeWidth={1.5}
-                                />
-                            </RatingStarBtn>
-                        ))}
-                    </RatingStarsRow>
-                    <RatingHint $weak={hoverStars > 0 && hoverStars * 2 < 5}>
-                        {hoverStars > 0
-                            ? `${hoverStars * 2}/10 ball${hoverStars * 2 < 5 ? " — chala bajarilgan deb hisoblanadi" : ""}`
-                            : "Yulduzchani tanlang"}
-                    </RatingHint>
-                    <ModalActions>
-                        <ModalBtn type="button" onClick={handleRatingCancel}>
-                            Bekor qilish
-                        </ModalBtn>
-                    </ModalActions>
-                </ModalBox>
-            </ModalOverlay>
-        )}
+            {ratingModal && (
+                <ModalOverlay onClick={handleRatingCancel}>
+                    <ModalBox onClick={(e) => e.stopPropagation()}>
+                        <ModalTitle>⭐ Qanday bajardingiz?</ModalTitle>
+                        <ModalSubtitle>
+                            <strong>{ratingModal.habit.title}</strong> odatini qanchalik sifatli
+                            bajarganingizni baholang.
+                        </ModalSubtitle>
+                        <RatingStarsRow onMouseLeave={() => setHoverStars(0)}>
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <RatingStarBtn
+                                    key={i}
+                                    type="button"
+                                    onMouseEnter={() => setHoverStars(i)}
+                                    onClick={() => handleRatingSelect(i)}
+                                >
+                                    <Star
+                                        size={30}
+                                        color={colors.warning}
+                                        fill={i <= hoverStars ? colors.warning : "none"}
+                                        strokeWidth={1.5}
+                                    />
+                                </RatingStarBtn>
+                            ))}
+                        </RatingStarsRow>
+                        <RatingHint $weak={hoverStars > 0 && hoverStars * 2 < 5}>
+                            {hoverStars > 0
+                                ? `${hoverStars * 2}/10 ball${hoverStars * 2 < 5 ? " — chala bajarilgan deb hisoblanadi" : ""}`
+                                : "Yulduzchani tanlang"}
+                        </RatingHint>
+                        <ModalActions>
+                            <ModalBtn type="button" onClick={handleRatingCancel}>
+                                Bekor qilish
+                            </ModalBtn>
+                        </ModalActions>
+                    </ModalBox>
+                </ModalOverlay>
+            )}
         </>
     );
 };
 
 const DisciplineRing = ({ score }) => {
-    const circumference = 2 * Math.PI * 44;
+    const size = 120;
+    const radius = 51;
+    const strokeWidth = 8;
+
+    const circumference = 2 * Math.PI * radius;
     const strokeDash = (score / 100) * circumference;
 
     return (
-        <svg width={100} height={100} viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="44" fill="none" stroke={colors.primaryLight} strokeWidth="8" />
+        <svg
+            width={size}
+            height={size}
+            viewBox="0 0 120 120"
+            style={{ flexShrink: 0 }}
+        >
+            {/* Background ring */}
             <circle
-                cx="50"
-                cy="50"
-                r="44"
+                cx="60"
+                cy="60"
+                r={radius}
+                fill="none"
+                stroke={colors.primaryLight}
+                strokeWidth={strokeWidth}
+            />
+
+            {/* Progress ring */}
+            <circle
+                cx="60"
+                cy="60"
+                r={radius}
                 fill="none"
                 stroke={colors.primary}
-                strokeWidth="8"
+                strokeWidth={strokeWidth}
                 strokeLinecap="round"
                 strokeDasharray={`${strokeDash} ${circumference}`}
-                transform="rotate(-90 50 50)"
-                style={{ transition: "stroke-dasharray 0.8s ease" }}
+                transform="rotate(-90 60 60)"
+                style={{
+                    transition: "stroke-dasharray 0.8s ease",
+                }}
             />
-            <text x="50" y="46" textAnchor="middle" fontSize="20" fontWeight="700" fill={colors.text} fontFamily="JetBrains Mono, monospace">
+
+            {/* Score */}
+            <text
+                x="60"
+                y="57"
+                textAnchor="middle"
+                fontSize="21"
+                fontWeight="700"
+                fill={colors.text}
+                fontFamily="JetBrains Mono, monospace"
+            >
                 {score}%
             </text>
-            <text x="50" y="62" textAnchor="middle" fontSize="10" fill={colors.textSubtle} fontFamily="Inter, sans-serif">
+
+            {/* Label */}
+            <text
+                x="60"
+                y="74"
+                textAnchor="middle"
+                fontSize="10"
+                fill={colors.textSubtle}
+                fontFamily="Inter, sans-serif"
+            >
                 intizom
             </text>
         </svg>

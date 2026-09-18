@@ -5,16 +5,26 @@ import { dedupeRoutines, habitKey } from "./routine";
 // hisoblaydi. FAQAT haqiqatda kuzatilgan (statuses mavjud bo'lgan) kunlar hisobga
 // olinadi — hali belgilanmagan kunlar 0% deb hisoblanmaydi, aks holda foiz
 // sun'iy pasayib ketardi. Kuzatilgan kun bo'lmasa — null (ma'lumot yo'q).
-export const getWeekAvgPct = (week, totalHabitsCount) => {
-    if (!week || !totalHabitsCount) return null;
+export const getWeekAvgPct = (week, routines) => {
+    if (!week) return null;
     const trackedDays = Object.keys(week.statuses || {});
     if (trackedDays.length === 0) return null;
 
-    const sum = trackedDays.reduce((acc, dayKey) => {
+    const habits = dedupeRoutines(routines);
+    let sum = 0;
+    let countedDays = 0;
+
+    trackedDays.forEach((dayKey) => {
+        const scheduledCount = habits.filter(
+            (h) => !h.days || h.days.length === 0 || h.days.includes(dayKey)
+        ).length;
+        if (scheduledCount === 0) return;
         const executions = week.executions?.[dayKey] || 0;
-        return acc + Math.min(100, Math.round((executions / totalHabitsCount) * 100));
-    }, 0);
-    return Math.round(sum / trackedDays.length);
+        sum += Math.min(100, Math.round((executions / scheduledCount) * 100));
+        countedDays += 1;
+    });
+
+    return countedDays > 0 ? Math.round(sum / countedDays) : null;
 };
 
 export const getTrackedDaysCount = (week) => (week ? Object.keys(week.statuses || {}).length : 0);
@@ -116,10 +126,25 @@ export const getMissionPriorityBreakdown = (missions) => {
 
 // So'nggi N ta hafta yozuvi (weekId bo'yicha xronologik tartiblangan) uchun
 // o'rtacha ijro trendini qaytaradi — faqat haqiqiy kuzatilgan haftalar
-export const getWeeklyTrend = (weeks, totalHabitsCount, limit = 8) => {
+export const getWeeklyTrend = (weeks, routines, limit = 8) => {
     return [...weeks]
         .sort((a, b) => (a.weekId || "").localeCompare(b.weekId || ""))
-        .map((week) => ({ weekId: week.weekId, pct: getWeekAvgPct(week, totalHabitsCount) }))
+        .map((week) => ({ weekId: week.weekId, pct: getWeekAvgPct(week, routines) }))
         .filter((w) => w.pct !== null)
         .slice(-limit);
+};
+
+// Bitta kun uchun to'g'ri ("shu kunga rejalashtirilgan odatlar soniga
+// nisbatan") ijro foizi. Dashboard/Statistics'dagi kunlik ustunlar
+// (haftalik bar chart) uchun ishlatiladi.
+export const getDayPct = (routines, week, dayKey) => {
+    const habits = dedupeRoutines(routines);
+    const scheduledCount = habits.filter(
+        (h) => !h.days || h.days.length === 0 || h.days.includes(dayKey)
+    ).length;
+    if (scheduledCount === 0) return null;
+    const hasData = week && Object.prototype.hasOwnProperty.call(week.statuses || {}, dayKey);
+    if (!hasData) return null;
+    const executions = week.executions?.[dayKey] || 0;
+    return Math.min(100, Math.round((executions / scheduledCount) * 100));
 };

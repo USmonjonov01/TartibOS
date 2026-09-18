@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Mountain, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, Milestone, Sparkles, X, Archive } from "lucide-react";
 import { useGoals } from "../../context/goals";
-import MountainScene from "./MountainScene";
+import StaircaseScene from "./StaircaseScene";
 import {
     Wrapper,
     HeaderRow,
@@ -32,10 +32,30 @@ import {
     GeneratedRowText,
     GeneratedRowStage,
     RemoveStepBtn,
+    ArchivedSection,
+    ArchivedToggle,
+    ArchivedList,
+    ArchivedRow,
+    ArchivedInfo,
+    ArchivedTitle,
+    ArchivedMeta,
+    SmallGhostButton,
+    SmallDangerButton,
 } from "./style";
 
 function Roadmap() {
-    const { goals, fetchGoals, createGoal, addStep, toggleStep, generateSteps } = useGoals();
+    const {
+        goals,
+        fetchGoals,
+        createGoal,
+        updateGoal,
+        deleteGoal,
+        addStep,
+        updateStep,
+        deleteStep,
+        toggleStep,
+        generateSteps,
+    } = useGoals();
     const [activeIndex, setActiveIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [newTitle, setNewTitle] = useState("");
@@ -43,16 +63,22 @@ function Roadmap() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [confirmTarget, setConfirmTarget] = useState(null); // { type: 'goal'|'step', goal, step? }
+
+    const activeGoals = goals.filter((g) => g.status !== "archived");
+    const archivedGoals = goals.filter((g) => g.status === "archived");
 
     useEffect(() => {
         fetchGoals().catch(() => {});
     }, [fetchGoals]);
 
     useEffect(() => {
-        if (activeIndex > goals.length - 1) {
-            setActiveIndex(Math.max(0, goals.length - 1));
+        if (activeIndex > activeGoals.length - 1) {
+            setActiveIndex(Math.max(0, activeGoals.length - 1));
         }
-    }, [goals, activeIndex]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeGoals.length, activeIndex]);
 
     const openModal = () => {
         setShowModal(true);
@@ -90,60 +116,122 @@ function Roadmap() {
         try {
             await createGoal({ title, steps: generatedSteps?.length ? generatedSteps : undefined });
             setShowModal(false);
-            setActiveIndex(goals.length); // yangi Goal oxirida qo'shiladi
+            setActiveIndex(activeGoals.length); // yangi Goal oxirida qo'shiladi
         } finally {
             setSubmitting(false);
         }
     };
 
     const goPrev = () => setActiveIndex((i) => Math.max(0, i - 1));
-    const goNext = () => setActiveIndex((i) => Math.min(goals.length - 1, i + 1));
+    const goNext = () => setActiveIndex((i) => Math.min(activeGoals.length - 1, i + 1));
+
+    const handleRenameGoal = (goalId, title) => updateGoal(goalId, { title });
+    const handleArchiveGoal = (goalId, status) => updateGoal(goalId, { status });
+
+    const requestDeleteGoal = (goal) => setConfirmTarget({ type: "goal", goal });
+    const requestDeleteStep = (goalId, step) => setConfirmTarget({ type: "step", goalId, step });
+
+    const confirmDelete = async () => {
+        if (!confirmTarget) return;
+        if (confirmTarget.type === "goal") {
+            await deleteGoal(confirmTarget.goal.id);
+        } else {
+            await deleteStep(confirmTarget.goalId, confirmTarget.step.id);
+        }
+        setConfirmTarget(null);
+    };
 
     return (
         <Wrapper>
             <HeaderRow>
                 <div>
                     <Title>Yo'l xaritasi</Title>
-                    <Subtitle>Har bir maqsad — o'z tog'i. Cho'qqiga qadam-baqadam yaqinlashing.</Subtitle>
+                    <Subtitle>Har bir maqsad — o'z zinapoyasi. Bosqichma-bosqich yuqoriga chiqing.</Subtitle>
                 </div>
                 <AddGoalButton onClick={openModal}>
                     <Plus size={15} /> Yangi maqsad
                 </AddGoalButton>
             </HeaderRow>
 
-            {goals.length === 0 ? (
+            {activeGoals.length === 0 ? (
                 <EmptyState>
-                    <Mountain size={28} style={{ marginBottom: 10, opacity: 0.5 }} />
-                    <div>Hali maqsadingiz yo'q. Birinchi tog'ingizni tanlang.</div>
+                    <Milestone size={28} style={{ marginBottom: 10, opacity: 0.5 }} />
+                    <div>Hali maqsadingiz yo'q. Birinchi zinapoyangizni quring.</div>
                 </EmptyState>
             ) : (
                 <>
                     <CarouselViewport>
                         <CarouselTrack $index={activeIndex}>
-                            {goals.map((goal) => (
+                            {activeGoals.map((goal) => (
                                 <CarouselSlide key={goal.id}>
-                                    <MountainScene goal={goal} onToggleStep={toggleStep} onAddStep={addStep} />
+                                    <StaircaseScene
+                                        goal={goal}
+                                        onToggleStep={toggleStep}
+                                        onAddStep={addStep}
+                                        onRenameGoal={handleRenameGoal}
+                                        onArchiveGoal={handleArchiveGoal}
+                                        onRequestDeleteGoal={requestDeleteGoal}
+                                        onUpdateStep={updateStep}
+                                        onRequestDeleteStep={requestDeleteStep}
+                                    />
                                 </CarouselSlide>
                             ))}
                         </CarouselTrack>
                     </CarouselViewport>
 
-                    {goals.length > 1 && (
+                    {activeGoals.length > 1 && (
                         <CarouselNav>
                             <NavArrow onClick={goPrev} disabled={activeIndex === 0}>
                                 <ChevronLeft size={16} />
                             </NavArrow>
                             <Dots>
-                                {goals.map((g, i) => (
+                                {activeGoals.map((g, i) => (
                                     <Dot key={g.id} $active={i === activeIndex} onClick={() => setActiveIndex(i)} />
                                 ))}
                             </Dots>
-                            <NavArrow onClick={goNext} disabled={activeIndex === goals.length - 1}>
+                            <NavArrow onClick={goNext} disabled={activeIndex === activeGoals.length - 1}>
                                 <ChevronRight size={16} />
                             </NavArrow>
                         </CarouselNav>
                     )}
                 </>
+            )}
+
+            {archivedGoals.length > 0 && (
+                <ArchivedSection>
+                    <ArchivedToggle onClick={() => setShowArchived((v) => !v)}>
+                        <Archive size={14} />
+                        Arxivlangan maqsadlar ({archivedGoals.length})
+                        <ChevronDown
+                            size={14}
+                            style={{ transform: showArchived ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+                        />
+                    </ArchivedToggle>
+                    {showArchived && (
+                        <ArchivedList>
+                            {archivedGoals.map((g) => {
+                                const done = (g.steps || []).filter((s) => s.completed).length;
+                                const total = (g.steps || []).length;
+                                return (
+                                    <ArchivedRow key={g.id}>
+                                        <ArchivedInfo>
+                                            <ArchivedTitle>{g.title}</ArchivedTitle>
+                                            <ArchivedMeta>
+                                                {done}/{total} bosqich bajarilgan
+                                            </ArchivedMeta>
+                                        </ArchivedInfo>
+                                        <SmallGhostButton onClick={() => handleArchiveGoal(g.id, "active")}>
+                                            Faollashtirish
+                                        </SmallGhostButton>
+                                        <SmallDangerButton onClick={() => requestDeleteGoal(g)}>
+                                            O'chirish
+                                        </SmallDangerButton>
+                                    </ArchivedRow>
+                                );
+                            })}
+                        </ArchivedList>
+                    )}
+                </ArchivedSection>
             )}
 
             {showModal && (
@@ -205,6 +293,39 @@ function Roadmap() {
                                 >
                                     {generatedSteps?.length ? "Shu bosqichlar bilan yaratish" : "Bo'sh Goal yaratish"}
                                 </PrimaryButton>
+                            </ModalActions>
+                        </ModalPad>
+                    </ModalBox>
+                </ModalOverlay>
+            )}
+
+            {confirmTarget && (
+                <ModalOverlay onClick={() => setConfirmTarget(null)}>
+                    <ModalBox onClick={(e) => e.stopPropagation()}>
+                        <ModalPad>
+                            <ModalTitle>
+                                {confirmTarget.type === "goal" ? "Maqsadni o'chirish" : "Bosqichni o'chirish"}
+                            </ModalTitle>
+                            <div style={{ fontSize: 13.5, color: "inherit", opacity: 0.85 }}>
+                                {confirmTarget.type === "goal" ? (
+                                    <>
+                                        <strong>{confirmTarget.goal.title}</strong> maqsadi va uning barcha bosqichlari
+                                        butunlay o'chiriladi. Bu amalni ortga qaytarib bo'lmaydi.
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong>{confirmTarget.step.title}</strong> bosqichi o'chiriladi. Bu amalni ortga
+                                        qaytarib bo'lmaydi.
+                                    </>
+                                )}
+                            </div>
+                            <ModalActions>
+                                <SecondaryButton type="button" onClick={() => setConfirmTarget(null)}>
+                                    Bekor qilish
+                                </SecondaryButton>
+                                <SmallDangerButton style={{ flex: 1, padding: "10px 16px" }} onClick={confirmDelete}>
+                                    Ha, o'chirish
+                                </SmallDangerButton>
                             </ModalActions>
                         </ModalPad>
                     </ModalBox>

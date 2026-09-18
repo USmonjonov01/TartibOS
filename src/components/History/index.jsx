@@ -308,7 +308,7 @@ const History = () => {
                         ) : (
                             <WeekList>
                                 {sortedWeeks.map((week) => {
-                                    const pct = getWeekAvgPct(week, totalHabitsCount);
+                                    const pct = getWeekAvgPct(week, routines);
                                     const trackedDays = Object.keys(week.statuses || {}).length;
                                     const isCurrent = week.weekId === currentWeekId;
                                     return (

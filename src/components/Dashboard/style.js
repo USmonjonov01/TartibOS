@@ -22,7 +22,7 @@ export const colors = {
 
 export const Wrapper = styled.div`
     padding: 32px 40px;
-    max-width: 1100px;
+    max-width: 1150px;
     margin: 0 auto;
     font-family: ${tokens.font.body};
 
@@ -32,6 +32,11 @@ export const Wrapper = styled.div`
 `;
 
 export const HeaderBlock = styled.div`
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-bottom: 32px;
 `;
 
@@ -57,14 +62,19 @@ export const Greeting = styled.h1`
     }
 `;
 
+
+
 export const TopGrid = styled.div`
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
         grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 560px) {
+        grid-template-columns: 1fr;
     }
 
     @media (max-width: 560px) {
@@ -86,7 +96,7 @@ export const Card = styled.div`
 export const DisciplineCardWrap = styled(Card)`
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 `;
 
 export const DisciplineLabel = styled.div`
@@ -99,7 +109,7 @@ export const DisciplineLabel = styled.div`
 `;
 
 export const DisciplineValue = styled.div`
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 700;
     color: ${colors.text};
     margin-bottom: 4px;
@@ -136,7 +146,7 @@ export const StatIconBox = styled.div`
 `;
 
 export const StatValue = styled.div`
-    font-size: 26px;
+    font-size: 36px;
     font-weight: 700;
     color: ${colors.text};
     font-family: ${tokens.font.mono};
@@ -147,6 +157,168 @@ export const StatSub = styled.div`
     font-size: 13px;
     color: ${(p) => p.$color};
     font-weight: 500;
+`;
+
+// Dashboard header'ining o'ng tomonida, salomlashuv matni bilan bir qatorda
+// (space-between) sig'ishi kerak bo'lgan, ixcham "bir qarashda" statistika
+// pill'lari — Daraja / TartibOS bilan / Bugungi missiyalar. Katta Card'lar
+// o'rniga taxminan 70-90px kenglikdagi kichik kapsulalar: icon + qiymat +
+// mikro-label, bitta qatorga joylashadi.
+export const StatPillRow = styled.div`
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: wrap;
+    position: sticky;
+    ;
+
+    @media (max-width: 560px) {
+        width: 100%;
+        justify-content: space-between;
+    }
+`;
+
+export const StatPill = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 118px;
+    height: 62px;
+    padding: 0 16px;
+    background: ${tokens.colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: ${tokens.radius.md};
+    cursor: ${(p) => (p.$clickable ? "pointer" : "default")};
+    transition: border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+        border-color: ${(p) => (p.$clickable ? colors.primary : colors.border)};
+        transform: ${(p) => (p.$clickable ? "translateY(-1px)" : "none")};
+    }
+
+    @media (max-width: 560px) {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+`;
+
+export const PillIconBox = styled.div`
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: ${(p) => p.$bg};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+`;
+
+export const PillBody = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.15;
+    min-width: 0;
+`;
+
+export const PillValue = styled.div`
+    font-size: 16px;
+    font-weight: 700;
+    color: ${colors.text};
+    font-family: ${tokens.font.mono};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+export const PillLabel = styled.div`
+    font-size: 9.5px;
+    font-weight: 600;
+    color: ${colors.textSubtle};
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+`;
+
+/* --- Bosh sahifadagi 3 ta qo'shimcha kuzatuv: Navbatdagi ish, Haftalik
+   solishtiruv, Eng past natijali kun --- */
+
+export const InsightsPanel = styled(Card)`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 280px;
+`;
+
+export const InsightRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid ${colors.border};
+    }
+`;
+
+export const InsightIconBox = styled.div`
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: ${(p) => p.$bg};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+`;
+
+export const InsightBody = styled.div`
+    flex: 1;
+    min-width: 0;
+`;
+
+export const InsightTitle = styled.div`
+    font-size: 13.5px;
+    font-weight: 600;
+    color: ${colors.text};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+export const InsightSub = styled.div`
+    font-size: 12px;
+    color: ${colors.textSubtle};
+    margin-top: 1px;
+`;
+
+export const InsightBadge = styled.span`
+    font-family: ${tokens.font.mono};
+    font-weight: 700;
+    font-size: 13px;
+    color: ${(p) => p.$color || colors.text};
+    white-space: nowrap;
+`;
+
+export const InsightActionBtn = styled.button`
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border-radius: ${tokens.radius.sm || "6px"};
+    border: 1px solid ${tokens.colors.amber};
+    background: ${tokens.colors.amberSoft};
+    color: ${colors.text};
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.85;
+    }
 `;
 
 export const MainGrid = styled.div`
@@ -636,4 +808,3 @@ export const ScoreStarsRow = styled.div`
     gap: 1px;
     flex-shrink: 0;
 `;
-

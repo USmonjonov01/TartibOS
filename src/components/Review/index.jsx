@@ -231,10 +231,10 @@ const Review = () => {
     const totalHabitsCount = useMemo(() => dedupeRoutines(routines).length, [routines]);
     const currentWeek = useMemo(() => weeks.find((w) => w.weekId === currentWeekId), [weeks, currentWeekId]);
     const previousWeek = useMemo(() => weeks.find((w) => w.weekId === previousWeekId), [weeks, previousWeekId]);
-    const currentPct = useMemo(() => getWeekAvgPct(currentWeek, totalHabitsCount), [currentWeek, totalHabitsCount]);
+    const currentPct = useMemo(() => getWeekAvgPct(currentWeek, routines), [currentWeek, routines]);
     const previousPct = useMemo(
-        () => getWeekAvgPct(previousWeek, totalHabitsCount),
-        [previousWeek, totalHabitsCount]
+        () => getWeekAvgPct(previousWeek, routines),
+        [previousWeek, routines]
     );
     const missionCurrent = useMemo(() => getMissionStatsForWeek(missions, currentWeekId), [missions, currentWeekId]);
     const habitRates = useMemo(

@@ -141,11 +141,11 @@ export const Dot = styled.button`
     transition: width 0.2s ease;
 `;
 
-/* --- Mountain scene --- */
+/* --- Staircase scene --- */
 
 export const GoalHeaderRow = styled.div`
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 8px;
     gap: 8px;
@@ -166,7 +166,7 @@ export const GoalMeta = styled.span`
     white-space: nowrap;
 `;
 
-export const MountainSvgBox = styled.div`
+export const StaircaseSvgBox = styled.div`
     width: 100%;
     aspect-ratio: 4 / 3;
     max-height: 340px;
@@ -325,6 +325,212 @@ export const RemoveStepBtn = styled.button`
     &:hover {
         color: ${tokens.colors.danger};
     }
+`;
+
+/* --- Goal menu (rename / archive / delete) --- */
+
+export const MenuWrap = styled.div`
+    position: relative;
+`;
+
+export const MenuButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: ${tokens.radius.md};
+    border: none;
+    background: transparent;
+    color: ${colors.textSubtle};
+    cursor: pointer;
+
+    &:hover {
+        background: ${colors.surfaceRaised};
+        color: ${colors.text};
+    }
+`;
+
+export const MenuDropdown = styled.div`
+    position: absolute;
+    top: 32px;
+    right: 0;
+    min-width: 170px;
+    background: ${colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: ${tokens.radius.md};
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    z-index: 20;
+    overflow: hidden;
+`;
+
+export const MenuItem = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 13px;
+    color: ${(p) => (p.$danger ? tokens.colors.danger : colors.text)};
+    cursor: pointer;
+
+    &:hover {
+        background: ${(p) => (p.$danger ? tokens.colors.dangerSoft : colors.surfaceRaised)};
+    }
+`;
+
+export const RenameInput = styled.input`
+    font-family: ${tokens.font.display};
+    font-size: 18px;
+    font-weight: 700;
+    color: ${colors.text};
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid ${colors.primary};
+    padding: 0 0 2px;
+    outline: none;
+    width: 100%;
+`;
+
+/* --- Step hover actions --- */
+
+export const StepActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0.45;
+    transition: opacity 0.12s ease;
+
+    &:hover {
+        opacity: 1;
+    }
+`;
+
+export const StepIconBtn = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: ${tokens.radius.sm || "6px"};
+    border: none;
+    background: transparent;
+    color: ${colors.textSubtle};
+    cursor: pointer;
+
+    &:hover {
+        background: ${colors.borderSubtle};
+        color: ${(p) => (p.$danger ? tokens.colors.danger : colors.text)};
+    }
+`;
+
+export const StepEditInput = styled.input`
+    flex: 1;
+    padding: 4px 8px;
+    border-radius: ${tokens.radius.sm || "6px"};
+    border: 1px solid ${colors.primary};
+    background: ${colors.surface};
+    color: ${colors.text};
+    font-size: 13.5px;
+
+    &:focus {
+        outline: none;
+    }
+`;
+
+/* --- Archived goals section --- */
+
+export const ArchivedSection = styled.div`
+    margin-top: 28px;
+`;
+
+export const ArchivedToggle = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: ${colors.textMuted};
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 0;
+
+    &:hover {
+        color: ${colors.text};
+    }
+`;
+
+export const ArchivedList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+`;
+
+export const ArchivedRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: ${tokens.radius.md};
+    border: 1px solid ${colors.border};
+    background: ${colors.surface};
+`;
+
+export const ArchivedInfo = styled.div`
+    flex: 1;
+`;
+
+export const ArchivedTitle = styled.div`
+    font-size: 13.5px;
+    color: ${colors.text};
+    font-weight: 600;
+`;
+
+export const ArchivedMeta = styled.div`
+    font-size: 11.5px;
+    color: ${colors.textSubtle};
+    margin-top: 1px;
+`;
+
+export const SmallGhostButton = styled.button`
+    padding: 6px 12px;
+    border-radius: ${tokens.radius.sm || "6px"};
+    border: 1px solid ${colors.border};
+    background: transparent;
+    color: ${colors.text};
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover {
+        background: ${colors.surfaceRaised};
+    }
+`;
+
+export const SmallDangerButton = styled(SmallGhostButton)`
+    border-color: ${tokens.colors.danger};
+    color: ${tokens.colors.danger};
+
+    &:hover {
+        background: ${tokens.colors.dangerSoft};
+    }
+`;
+
+export const CompletedBanner = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: ${tokens.radius.md};
+    background: ${colors.successLight};
+    border: 1px solid ${colors.success};
+    font-size: 13px;
+    color: ${colors.text};
 `;
 
 /* --- Modal (create goal) --- */

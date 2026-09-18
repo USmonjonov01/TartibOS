@@ -1,0 +1,450 @@
+import { useState } from "react";
+import { MoreVertical, Pencil, Archive, ArchiveRestore, Trash2, X } from "lucide-react";
+import { getGoalLevel } from "../../context/goals";
+import {
+    GoalHeaderRow,
+    GoalTitle,
+    GoalMeta,
+    StaircaseSvgBox,
+    StepList,
+    StepRow,
+    StepCheck,
+    StepTitle,
+    StepStage,
+    AddStepRow,
+    AddStepInput,
+    AddStepBtn,
+    MenuWrap,
+    MenuButton,
+    MenuDropdown,
+    MenuItem,
+    RenameInput,
+    StepActions,
+    StepIconBtn,
+    StepEditInput,
+    CompletedBanner,
+    SmallGhostButton,
+    colors,
+} from "./style";
+
+// Zinapoya dizayni — har bir bosqich alohida "pog'ona" (tread) sifatida
+// chiziladi, chapdan (poydevor) o'ngga-yuqoriga (cho'qqi/goal) qarab
+// ko'tariladi. Pog'onalar soni = shu Goal'dagi bosqichlar soni bo'yicha
+// dinamik hisoblanadi, shu sababli har bir Goal o'z zinapoyasiga ega bo'ladi.
+
+const GROUND_Y = 246;
+const TOP_Y = 54;
+const LEFT_X = 34;
+const RIGHT_X = 366;
+const GAP = 4; // pog'onalar orasidagi tirqish
+
+function StaircaseScene({
+    goal,
+    onToggleStep,
+    onAddStep,
+    onRenameGoal,
+    onArchiveGoal,
+    onRequestDeleteGoal,
+    onUpdateStep,
+    onRequestDeleteStep,
+}) {
+    const [newStepTitle, setNewStepTitle] = useState("");
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [renaming, setRenaming] = useState(false);
+    const [titleDraft, setTitleDraft] = useState(goal.title);
+    const [editingStepId, setEditingStepId] = useState(null);
+    const [stepDraft, setStepDraft] = useState("");
+
+    const steps = goal.steps || [];
+    const total = steps.length;
+    const completedCount = steps.filter((s) => s.completed).length;
+    const nextStepIndex = steps.findIndex((s) => !s.completed);
+    const reachedTop = total > 0 && nextStepIndex === -1;
+
+    const currentStage =
+        [...steps].reverse().find((s) => s.completed)?.stageLabel || "Sayohat boshlandi";
+
+    // Pog'onalar geometriyasi — bosqichlar sonidan kelib chiqib dinamik
+    // hisoblanadi, shu sababli 2 ta ham, 12 ta bosqichli Goal ham to'g'ri
+    // sig'ib ketadi.
+    const stepCount = Math.max(total, 1);
+    const stepRun = (RIGHT_X - LEFT_X) / stepCount;
+    const stepRise = (GROUND_Y - TOP_Y) / stepCount;
+
+    const treadTopY = (i) => GROUND_Y - (i + 1) * stepRise;
+    const treadX = (i) => LEFT_X + i * stepRun;
+    const treadCenterX = (i) => treadX(i) + (stepRun - GAP) / 2;
+
+    // Bayroq — eng oxirgi (eng baland) pog'ona ustida, Goal nomi bilan.
+    const flagX = total > 0 ? treadCenterX(total - 1) : LEFT_X + stepRun / 2;
+    const flagTopY = total > 0 ? treadTopY(total - 1) : GROUND_Y - stepRise;
+
+    // "Siz hozir shu yerdasiz" belgisi — oxirgi bajarilgan pog'ona ustida,
+    // hali hech qaysi bosqich bajarilmagan bo'lsa — poydevorda turadi.
+    let markerX;
+    let markerY;
+    if (total === 0) {
+        markerX = LEFT_X - 6;
+        markerY = GROUND_Y;
+    } else if (reachedTop) {
+        markerX = flagX;
+        markerY = flagTopY - 14;
+    } else if (nextStepIndex <= 0) {
+        markerX = LEFT_X - 6;
+        markerY = GROUND_Y;
+    } else {
+        markerX = treadCenterX(nextStepIndex - 1);
+        markerY = treadTopY(nextStepIndex - 1) - 14;
+    }
+
+    const handleAddStep = (e) => {
+        e.preventDefault();
+        const title = newStepTitle.trim();
+        if (!title) return;
+        onAddStep(goal.id, { title });
+        setNewStepTitle("");
+    };
+
+    const submitRename = () => {
+        const title = titleDraft.trim();
+        setRenaming(false);
+        if (title && title !== goal.title) onRenameGoal(goal.id, title);
+        else setTitleDraft(goal.title);
+    };
+
+    const startEditStep = (step) => {
+        setEditingStepId(step.id);
+        setStepDraft(step.title);
+    };
+
+    const submitStepEdit = (step) => {
+        const title = stepDraft.trim();
+        setEditingStepId(null);
+        if (title && title !== step.title) onUpdateStep(goal.id, step.id, { title });
+    };
+
+    return (
+        <div>
+            {total > 0 && completedCount === total && goal.status !== "archived" && (
+                <CompletedBanner>
+                    <span>🏁 Tabriklaymiz! Bu maqsadning barcha bosqichlari bajarildi.</span>
+                    <SmallGhostButton onClick={() => onArchiveGoal(goal.id, "archived")}>
+                        Arxivlash
+                    </SmallGhostButton>
+                </CompletedBanner>
+            )}
+
+            <GoalHeaderRow>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {renaming ? (
+                        <RenameInput
+                            autoFocus
+                            value={titleDraft}
+                            onChange={(e) => setTitleDraft(e.target.value)}
+                            onBlur={submitRename}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") submitRename();
+                                if (e.key === "Escape") {
+                                    setTitleDraft(goal.title);
+                                    setRenaming(false);
+                                }
+                            }}
+                        />
+                    ) : (
+                        <GoalTitle>{goal.title}</GoalTitle>
+                    )}
+                    <div style={{ fontSize: 12, color: colors.textSubtle, marginTop: 2 }}>
+                        Hozirgi bosqich: {currentStage}
+                    </div>
+                </div>
+                <GoalMeta>
+                    Lv {getGoalLevel(goal)} · {completedCount}/{total} bosqich
+                </GoalMeta>
+                <MenuWrap>
+                    <MenuButton onClick={() => setMenuOpen((v) => !v)}>
+                        <MoreVertical size={16} />
+                    </MenuButton>
+                    {menuOpen && (
+                        <MenuDropdown onMouseLeave={() => setMenuOpen(false)}>
+                            <MenuItem
+                                onClick={() => {
+                                    setRenaming(true);
+                                    setMenuOpen(false);
+                                }}
+                            >
+                                <Pencil size={14} /> Nomini tahrirlash
+                            </MenuItem>
+                            {goal.status === "archived" ? (
+                                <MenuItem
+                                    onClick={() => {
+                                        onArchiveGoal(goal.id, "active");
+                                        setMenuOpen(false);
+                                    }}
+                                >
+                                    <ArchiveRestore size={14} /> Faollashtirish
+                                </MenuItem>
+                            ) : (
+                                <MenuItem
+                                    onClick={() => {
+                                        onArchiveGoal(goal.id, "archived");
+                                        setMenuOpen(false);
+                                    }}
+                                >
+                                    <Archive size={14} /> Arxivlash
+                                </MenuItem>
+                            )}
+                            <MenuItem
+                                $danger
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    onRequestDeleteGoal(goal);
+                                }}
+                            >
+                                <Trash2 size={14} /> O'chirish
+                            </MenuItem>
+                        </MenuDropdown>
+                    )}
+                </MenuWrap>
+            </GoalHeaderRow>
+
+            <StaircaseSvgBox>
+                <svg viewBox="0 0 400 300" width="100%" height="100%">
+                    <defs>
+                        <linearGradient id={`stepFillDone-${goal.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={colors.success} stopOpacity="1" />
+                            <stop offset="100%" stopColor={colors.success} stopOpacity="0.72" />
+                        </linearGradient>
+                        <linearGradient id={`stepFillNext-${goal.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={colors.primary} stopOpacity="0.32" />
+                            <stop offset="100%" stopColor={colors.primary} stopOpacity="0.14" />
+                        </linearGradient>
+                        <radialGradient id={`topGlow-${goal.id}`} cx="50%" cy="0%" r="70%">
+                            <stop offset="0%" stopColor={colors.primary} stopOpacity="0.14" />
+                            <stop offset="100%" stopColor={colors.primary} stopOpacity="0" />
+                        </radialGradient>
+                        <style>
+                            {`
+                                @keyframes tos-pulse-ring {
+                                    0%   { r: 9;  opacity: 0.55; }
+                                    70%  { r: 20; opacity: 0; }
+                                    100% { r: 20; opacity: 0; }
+                                }
+                                @keyframes tos-pulse-core {
+                                    0%, 100% { transform: scale(1); }
+                                    50%      { transform: scale(1.12); }
+                                }
+                                @keyframes tos-glow-step {
+                                    0%, 100% { opacity: 0.85; }
+                                    50%      { opacity: 1; }
+                                }
+                                .tos-pulse-ring { animation: tos-pulse-ring 2.2s ease-out infinite; transform-origin: center; }
+                                .tos-pulse-core { animation: tos-pulse-core 2.2s ease-in-out infinite; transform-origin: center; }
+                                .tos-glow-step { animation: tos-glow-step 2.2s ease-in-out infinite; }
+                            `}
+                        </style>
+                    </defs>
+
+                    {/* Cho'qqi tomon yorug'lik — atmosfera */}
+                    <rect x="0" y="0" width="400" height="300" fill={`url(#topGlow-${goal.id})`} />
+
+                    {/* Poydevor chizig'i */}
+                    <line
+                        x1="14"
+                        y1={GROUND_Y}
+                        x2="386"
+                        y2={GROUND_Y}
+                        stroke={colors.border}
+                        strokeWidth="1.5"
+                        opacity="0.6"
+                    />
+
+                    {/* Pog'onalar — har biri bitta bosqich */}
+                    {total === 0 ? (
+                        // Hali bosqich yo'q — xira "duxovka" zinapoya taklifi
+                        Array.from({ length: 4 }).map((_, i) => {
+                            const w = (RIGHT_X - LEFT_X) / 4;
+                            const y = GROUND_Y - (i + 1) * ((GROUND_Y - TOP_Y) / 4);
+                            return (
+                                <rect
+                                    key={i}
+                                    x={LEFT_X + i * w}
+                                    y={y}
+                                    width={w - GAP}
+                                    height={GROUND_Y - y}
+                                    rx="3"
+                                    fill="none"
+                                    stroke={colors.border}
+                                    strokeDasharray="3 4"
+                                    strokeWidth="1.5"
+                                    opacity="0.55"
+                                />
+                            );
+                        })
+                    ) : (
+                        steps.map((step, i) => {
+                            const x = treadX(i);
+                            const y = treadTopY(i);
+                            const w = stepRun - GAP;
+                            const h = GROUND_Y - y;
+                            const isNext = i === nextStepIndex;
+                            const fill = step.completed
+                                ? `url(#stepFillDone-${goal.id})`
+                                : isNext
+                                  ? `url(#stepFillNext-${goal.id})`
+                                  : colors.surfaceRaised;
+                            const stroke = step.completed
+                                ? colors.success
+                                : isNext
+                                  ? colors.primary
+                                  : colors.border;
+
+                            return (
+                                <g key={step.id}>
+                                    <rect
+                                        x={x}
+                                        y={y}
+                                        width={w}
+                                        height={h}
+                                        rx="4"
+                                        fill={fill}
+                                        stroke={stroke}
+                                        strokeWidth={isNext ? "1.75" : "1.25"}
+                                        strokeDasharray={step.completed || isNext ? "none" : "2 4"}
+                                        className={isNext ? "tos-glow-step" : undefined}
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => onToggleStep(goal.id, step.id)}
+                                    />
+
+                                    {/* Pog'ona ustidagi belgi (bosqich holati) */}
+                                    <g
+                                        transform={`translate(${x + w / 2}, ${y - 11})`}
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => onToggleStep(goal.id, step.id)}
+                                    >
+                                        {isNext && (
+                                            <circle
+                                                r="9"
+                                                fill="none"
+                                                stroke={colors.primary}
+                                                strokeWidth="1.5"
+                                                className="tos-pulse-ring"
+                                            />
+                                        )}
+                                        <circle
+                                            r="6.5"
+                                            fill={step.completed ? colors.success : colors.surface}
+                                            stroke={step.completed ? colors.success : isNext ? colors.primary : colors.border}
+                                            strokeWidth="1.75"
+                                        />
+                                        {step.completed && (
+                                            <path
+                                                d="M-2.8,0 L-0.6,2.4 L3,-2.6"
+                                                fill="none"
+                                                stroke="#fff"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        )}
+                                    </g>
+                                </g>
+                            );
+                        })
+                    )}
+
+                    {/* Cho'qqidagi bayroq — Goal nomi */}
+                    <line
+                        x1={flagX}
+                        y1={flagTopY}
+                        x2={flagX}
+                        y2={flagTopY - 28}
+                        stroke={colors.text}
+                        strokeWidth="1.5"
+                        opacity="0.8"
+                    />
+                    <path
+                        d={`M${flagX},${flagTopY - 28} L${flagX + 19},${flagTopY - 22} L${flagX},${flagTopY - 16} Z`}
+                        fill={reachedTop ? colors.success : colors.primary}
+                    />
+                    <text
+                        x={flagX}
+                        y={flagTopY - 34}
+                        textAnchor="middle"
+                        fontSize="10.5"
+                        fontWeight="700"
+                        fill={colors.text}
+                        opacity="0.85"
+                    >
+                        {goal.title.length > 26 ? goal.title.slice(0, 24) + "…" : goal.title}
+                    </text>
+
+                    {/* "Siz hozir shu yerdasiz" — nafas oluvchi belgi */}
+                    <g transform={`translate(${markerX}, ${markerY})`}>
+                        <circle r="9" fill="none" stroke={colors.primary} strokeWidth="1.5" className="tos-pulse-ring" />
+                        <circle r="5.5" fill={colors.primary} className="tos-pulse-core" />
+                        <circle r="2" fill="#fff" />
+                    </g>
+                </svg>
+            </StaircaseSvgBox>
+
+            <StepList>
+                {steps.map((step) => (
+                    <StepRow key={step.id} onClick={() => editingStepId !== step.id && onToggleStep(goal.id, step.id)}>
+                        <StepCheck $done={step.completed}>
+                            {step.completed && (
+                                <svg width="10" height="10" viewBox="0 0 10 10">
+                                    <path
+                                        d="M1.5,5.2 L4,7.7 L8.5,2.2"
+                                        fill="none"
+                                        stroke="#fff"
+                                        strokeWidth="1.6"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            )}
+                        </StepCheck>
+
+                        {editingStepId === step.id ? (
+                            <StepEditInput
+                                autoFocus
+                                value={stepDraft}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => setStepDraft(e.target.value)}
+                                onBlur={() => submitStepEdit(step)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") submitStepEdit(step);
+                                    if (e.key === "Escape") setEditingStepId(null);
+                                }}
+                            />
+                        ) : (
+                            <>
+                                <StepTitle $done={step.completed}>{step.title}</StepTitle>
+                                {step.stageLabel && <StepStage>{step.stageLabel}</StepStage>}
+                                <StepActions onClick={(e) => e.stopPropagation()}>
+                                    <StepIconBtn onClick={() => startEditStep(step)}>
+                                        <Pencil size={12} />
+                                    </StepIconBtn>
+                                    <StepIconBtn $danger onClick={() => onRequestDeleteStep(goal.id, step)}>
+                                        <X size={13} />
+                                    </StepIconBtn>
+                                </StepActions>
+                            </>
+                        )}
+                    </StepRow>
+                ))}
+            </StepList>
+
+            <AddStepRow onSubmit={handleAddStep}>
+                <AddStepInput
+                    placeholder="Yangi bosqich qo'shish..."
+                    value={newStepTitle}
+                    onChange={(e) => setNewStepTitle(e.target.value)}
+                />
+                <AddStepBtn type="submit">+</AddStepBtn>
+            </AddStepRow>
+        </div>
+    );
+}
+
+export default StaircaseScene;

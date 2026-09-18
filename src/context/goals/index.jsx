@@ -6,6 +6,29 @@ import { initialState, goalReducer } from "./reducer";
 
 const GoalContext = createContext(null);
 
+// Level va unvon ENDI faqat shu bitta Goal'ning o'zidan hisoblanadi — boshqa
+// Goal'lar bilan hech qachon aralashmaydi. Bir nechta Goal bo'lsa, har biri
+// o'z Level'iga ega bo'ladi (masalan Goal A — Level 3, Goal B — Level 5,
+// bir-birini bosib o'tmaydi).
+export const getGoalLevel = (goal) => 1 + (goal?.steps || []).filter((s) => s.completed).length;
+
+export const getGoalStage = (goal) => {
+    const completed = [...(goal?.steps || [])]
+        .filter((s) => s.completed && s.completedAt)
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    return completed[0]?.stageLabel || null;
+};
+
+// Dashboard header'da ko'rsatish uchun "asosiy" Goal — faol Goal'lar orasida
+// eng kichik `order`ga ega bo'lgani (ya'ni birinchi yaratilgan/eng tepadagi).
+// Bir nechta Goal bo'lsa ham, header faqat BITTASINI ko'rsatadi — qolganlari
+// Yo'l xaritasi sahifasida, har biri o'zining mustaqil Level/unvoni bilan.
+export const getPrimaryGoal = (goals) => {
+    const active = (goals || []).filter((g) => g.status !== "archived");
+    if (active.length === 0) return null;
+    return [...active].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
+};
+
 export const GoalProvider = ({ children }) => {
     const [state, dispatch] = useReducer(goalReducer, initialState);
     const { user } = useUser();
@@ -17,7 +40,6 @@ export const GoalProvider = ({ children }) => {
         try {
             const { data } = await goalApi.get("/goals");
             dispatch({ type: "GOAL_SUCCESS", payload: data.goals || [] });
-            dispatch({ type: "GOAL_LEVEL", payload: data.level ?? 1 });
             return data.goals || [];
         } catch (err) {
             const message = err.response?.data?.message || err.message || "Maqsadlarni olishda xatolik";
@@ -66,12 +88,8 @@ export const GoalProvider = ({ children }) => {
         return data.step;
     };
 
-    // Bosqichni bajarilgan/bajarilmagan deb belgilaydi. Backend level'ni
-    // ham yangilaydi va shu javobda qaytaradi — shuning uchun bu yerda
-    // qayta fetchGoals() chaqirishga hojat yo'q, lokal state to'g'ridan-to'g'ri
-    // yangilanadi.
-    const toggleStep = async (goalId, stepId) => {
-        const { data } = await goalApi.patch(`/goals/${goalId}/steps/${stepId}/toggle`);
+    const updateStep = async (goalId, stepId, payload) => {
+        const { data } = await goalApi.put(`/goals/${goalId}/steps/${stepId}`, payload);
         dispatch({
             type: "GOAL_SUCCESS",
             payload: state.goals.map((g) =>
@@ -80,9 +98,36 @@ export const GoalProvider = ({ children }) => {
                     : g
             ),
         });
-        dispatch({ type: "GOAL_LEVEL", payload: data.level });
+        return data.step;
+    };
+
+    const deleteStep = async (goalId, stepId) => {
+        await goalApi.delete(`/goals/${goalId}/steps/${stepId}`);
+        dispatch({
+            type: "GOAL_SUCCESS",
+            payload: state.goals.map((g) =>
+                g.id === goalId ? { ...g, steps: g.steps.filter((s) => s.id !== stepId) } : g
+            ),
+        });
+    };
+
+    // Bosqichni bajarilgan/bajarilmagan deb belgilaydi. Level backend'da
+    // saqlanmaydi — shu Goal'ning yangilangan steps ro'yxatidan to'g'ridan-to'g'ri
+    // hisoblanadi, shuning uchun "level up" bildirishnomasi ham AYNAN shu
+    // Goal'ning o'z Level'i va o'z unvoni bilan chiqadi, boshqa Goal'larga
+    // taalluqli emas.
+    const toggleStep = async (goalId, stepId) => {
+        const { data } = await goalApi.patch(`/goals/${goalId}/steps/${stepId}/toggle`);
+        const updatedGoals = state.goals.map((g) =>
+            g.id === goalId
+                ? { ...g, steps: g.steps.map((s) => (s.id === stepId ? data.step : s)) }
+                : g
+        );
+        dispatch({ type: "GOAL_SUCCESS", payload: updatedGoals });
+
         if (data.leveledUp) {
-            notifyGoalLevelUp(data.level, data.step?.stageLabel);
+            const updatedGoal = updatedGoals.find((g) => g.id === goalId);
+            notifyGoalLevelUp(getGoalLevel(updatedGoal), data.step?.stageLabel);
         }
         return data;
     };
@@ -97,6 +142,8 @@ export const GoalProvider = ({ children }) => {
                 updateGoal,
                 deleteGoal,
                 addStep,
+                updateStep,
+                deleteStep,
                 toggleStep,
             }}
         >

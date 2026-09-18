@@ -163,8 +163,8 @@ export const NotificationsProvider = ({ children }) => {
             }
         }
 
-        const currentWeekPct = getWeekAvgPct(currentWeek, totalHabitsCount);
-        const previousWeekPct = getWeekAvgPct(previousWeek, totalHabitsCount);
+        const currentWeekPct = getWeekAvgPct(currentWeek, routines);
+        const previousWeekPct = getWeekAvgPct(previousWeek, routines);
         if (currentWeekPct !== null && previousWeekPct !== null && currentWeekPct > previousWeekPct) {
             pushNotification("level-up-week", {
                 description: `Bu hafta o'rtacha ijro ${currentWeekPct}% — o'tgan hafta ${previousWeekPct}%dan yaxshi!`,

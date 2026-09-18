@@ -76,6 +76,21 @@ export const ClockDate = styled.div`
     text-transform: capitalize;
 `;
 
+export const LaneGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+`;
+
+export const LaneLabel = styled.div`
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: ${colors.textMuted};
+    margin-bottom: 2px;
+`;
+
 export const TrackWrap = styled.div`
     position: relative;
     margin-top: 18px;

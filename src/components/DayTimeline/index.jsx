@@ -8,6 +8,8 @@ import {
     ClockBlock,
     ClockValue,
     ClockDate,
+    LaneGroup,
+    LaneLabel,
     TrackWrap,
     Track,
     Segment,
@@ -45,8 +47,37 @@ const stateLabel = (state) => {
     return "Kutilmoqda";
 };
 
+// Vaqti to'qnashgan itemlarni avtomatik bir necha "qator"ga (lane) taqsimlaydi
+// — klassik greedy interval-scheduling algoritmi. Har bir lane — oxirgi
+// qo'shilgan itemning tugash vaqti. Yangi item shu vaqtdan keyin boshlansa,
+// o'sha lane'ga qo'shiladi; aks holda yangi lane ochiladi. Natijada odatda
+// 1 ta lane yetarli, faqat vaqti chindan to'qnashganda 2-, 3-lane paydo bo'ladi.
+const packIntoLanes = (segments) => {
+    const lanesEnd = []; // har bir lane'ning oxirgi itemi tugagan daqiqasi
+    const lanes = [];
+
+    [...segments]
+        .sort((a, b) => a.startMin - b.startMin)
+        .forEach((seg) => {
+            let laneIndex = lanesEnd.findIndex((end) => end <= seg.startMin);
+            if (laneIndex === -1) {
+                laneIndex = lanesEnd.length;
+                lanes.push([]);
+            }
+            lanesEnd[laneIndex] = seg.endMin;
+            lanes[laneIndex].push(seg);
+        });
+
+    return lanes;
+};
+
 /**
- * items: [{ id, title, icon, start: "HH:MM", end?: "HH:MM", state: "done"|"missed"|"excused"|"pending" }]
+ * items: [{ id, title, icon, start: "HH:MM", end?: "HH:MM", state, type: "habit"|"mission" }]
+ *
+ * Qatorlar: tepada missiyalar (odatda 1 qator), pastda odatlar — agar ikkita
+ * odat vaqti to'qnashsa, odatlar guruhi ichida avtomatik qo'shimcha qator
+ * ochiladi. Shu orqali "hozir aynan qaysi odat/missiya payti" hech qachon
+ * bulanib ketmaydi.
  */
 const DayTimeline = ({ items = [], title = "Kun jarayoni" }) => {
     const [now, setNow] = useState(() => new Date());
@@ -61,7 +92,7 @@ const DayTimeline = ({ items = [], title = "Kun jarayoni" }) => {
     const clockText = now.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", hour12: false });
     const dateText = now.toLocaleDateString("uz-UZ", { day: "2-digit", month: "short" });
 
-    const segments = useMemo(() => {
+    const allSegments = useMemo(() => {
         return (items || [])
             .map((item) => {
                 const start = toMinutes(item.start);
@@ -74,9 +105,33 @@ const DayTimeline = ({ items = [], title = "Kun jarayoni" }) => {
             .sort((a, b) => a.startMin - b.startMin);
     }, [items]);
 
+    const missionLanes = useMemo(
+        () => packIntoLanes(allSegments.filter((s) => s.type === "mission")),
+        [allSegments]
+    );
+    const habitLanes = useMemo(
+        () => packIntoLanes(allSegments.filter((s) => s.type !== "mission")),
+        [allSegments]
+    );
+
     const activeItem = useMemo(
-        () => segments.find((s) => nowMinutes >= s.startMin && nowMinutes < s.endMin) || null,
-        [segments, nowMinutes]
+        () => allSegments.find((s) => nowMinutes >= s.startMin && nowMinutes < s.endMin) || null,
+        [allSegments, nowMinutes]
+    );
+
+    const renderLane = (segments, laneIdx) => (
+        <Track key={laneIdx}>
+            {segments.map((s) => (
+                <Segment
+                    key={s.id}
+                    $left={(s.startMin / 1440) * 100}
+                    $width={Math.max(((s.endMin - s.startMin) / 1440) * 100, 0.4)}
+                    $color={stateColor(s.state)}
+                    $isNow={s === activeItem}
+                    title={`${s.title} · ${s.start}${s.end ? "–" + s.end : ""} · ${stateLabel(s.state)}`}
+                />
+            ))}
+        </Track>
     );
 
     return (
@@ -96,23 +151,26 @@ const DayTimeline = ({ items = [], title = "Kun jarayoni" }) => {
                 </ClockBlock>
             </Head>
 
-            {segments.length === 0 ? (
+            {allSegments.length === 0 ? (
                 <EmptyRow>Bugungi odat va missiyalar uchun vaqt belgilanmagan</EmptyRow>
             ) : (
                 <TrackWrap>
                     <NowMarker $left={nowLeft} />
-                    <Track>
-                        {segments.map((s) => (
-                            <Segment
-                                key={s.id}
-                                $left={(s.startMin / 1440) * 100}
-                                $width={Math.max(((s.endMin - s.startMin) / 1440) * 100, 0.4)}
-                                $color={stateColor(s.state)}
-                                $isNow={s === activeItem}
-                                title={`${s.title} · ${s.start}${s.end ? "–" + s.end : ""} · ${stateLabel(s.state)}`}
-                            />
-                        ))}
-                    </Track>
+
+                    {missionLanes.length > 0 && (
+                        <LaneGroup>
+                            <LaneLabel>Missiyalar</LaneLabel>
+                            {missionLanes.map((lane, i) => renderLane(lane, `m${i}`))}
+                        </LaneGroup>
+                    )}
+
+                    {habitLanes.length > 0 && (
+                        <LaneGroup>
+                            <LaneLabel>Odatlar</LaneLabel>
+                            {habitLanes.map((lane, i) => renderLane(lane, `h${i}`))}
+                        </LaneGroup>
+                    )}
+
                     <TickRow>
                         {HOUR_TICKS.map((h, i) => (
                             <Tick key={h} $left={(h / 24) * 100} $edge={i === 0 ? "start" : "mid"}>
@@ -131,13 +189,13 @@ const DayTimeline = ({ items = [], title = "Kun jarayoni" }) => {
                             <LegendDot $color={colors.success} />
                             <span>Bajarildi</span>
                         </LegendItem>
-                        {segments.some((s) => s.state === "missed") && (
+                        {allSegments.some((s) => s.state === "missed") && (
                             <LegendItem>
                                 <LegendDot $color={colors.danger} />
                                 <span>O'tkazib yuborilgan</span>
                             </LegendItem>
                         )}
-                        {segments.some((s) => s.state === "excused") && (
+                        {allSegments.some((s) => s.state === "excused") && (
                             <LegendItem>
                                 <LegendDot $color={colors.muted} />
                                 <span>Sababli</span>
