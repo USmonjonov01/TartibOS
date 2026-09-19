@@ -25,6 +25,24 @@ const loadGoogleScript = () => {
     return scriptPromise;
 };
 
+// google.accounts.id.initialize() FAQAT BIR MARTA chaqirilishi kerak — aks
+// holda Google konsolga "initialize() is called multiple times" ogohlantirishini
+// chiqaradi (SignIn va SignUp orasida necha marta o'tsangiz ham komponent
+// qayta mount bo'ladi). Shu sabab initialize'ning o'zi global darajada faqat
+// bir marta ishga tushadi, uning "callback"i esa doim ENG SO'NGGI mount
+// bo'lgan tugmaning funksiyasiga yo'naltiriladi (activeHandler orqali) — shu
+// bilan har bir sahifa o'zining navigate/loginWithGoogle'idan foydalanadi.
+let initialized = false;
+let activeHandler = null;
+const ensureInitialized = () => {
+    if (initialized || !window.google?.accounts?.id) return;
+    window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => activeHandler?.(response),
+    });
+    initialized = true;
+};
+
 // Google'ning tayyor tugmasini (renderButton) ishlatamiz — bu Google
 // tomonidan tavsiya etiladigan, eng barqaror usul (o'ziga xos onclick +
 // popup boshqaruvini o'zi bajaradi). Faqat GOOGLE_CLIENT_ID sozlangan bo'lsa
@@ -58,17 +76,18 @@ const GoogleButton = ({ label = "continue_with", onError }) => {
             .then(() => {
                 if (cancelled || !wrapRef.current || !window.google?.accounts?.id) return;
 
-                window.google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: async (response) => {
-                        try {
-                            await loginWithGoogleRef.current(response.credential);
-                            navigateRef.current("/dashboard");
-                        } catch (err) {
-                            onErrorRef.current?.(err);
-                        }
-                    },
-                });
+                // Shu komponent ekranda turgan paytda Google'ning javobi
+                // AYNAN shu instansiyaga kelishini ta'minlaydi.
+                activeHandler = async (response) => {
+                    try {
+                        await loginWithGoogleRef.current(response.credential);
+                        navigateRef.current("/dashboard");
+                    } catch (err) {
+                        onErrorRef.current?.(err);
+                    }
+                };
+
+                ensureInitialized();
 
                 window.google.accounts.id.renderButton(wrapRef.current, {
                     type: "standard",
