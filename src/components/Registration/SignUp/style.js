@@ -232,3 +232,19 @@ export const BackButton = styled.button`
         color: ${colors.textSecondary};
     }
 `;
+export const Divider = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 18px;
+    color: ${colors.textMuted};
+    font-size: 12px;
+
+    &::before,
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: ${colors.hairline};
+    }
+`;

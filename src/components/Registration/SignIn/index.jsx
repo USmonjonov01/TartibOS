@@ -22,8 +22,12 @@ import {
     LinkButton,
     BackText,
     BackButton,
+    Divider,
+    ForgotRow,
+    ForgotLink,
 } from "./style";
 import { useUser } from "../../../context/users";
+import GoogleButton from "../GoogleButton";
 import TartibOSLogo from "../../../assets/icons/TartibOS1.png"
 
 const SignIn = () => {
@@ -31,6 +35,7 @@ const SignIn = () => {
     const { login, loading, error, clearError } = useUser();
     const [showPassword, setShowPassword] = useState(false);
     const [form, setForm] = useState({ email: "", parol: "" });
+    const [googleError, setGoogleError] = useState("");
 
     const handleChange = (field) => (e) => {
         setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -61,9 +66,12 @@ const SignIn = () => {
                     <Subtitle>Hisobingizga kiring</Subtitle>
                 </Header>
 
-                <Form onSubmit={handleSubmit}>
-                    {error && <ErrorBanner>{error}</ErrorBanner>}
+                {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
 
+                <GoogleButton label="signin_with" onError={() => setGoogleError("Google bilan kirishda xatolik yuz berdi")} />
+                <Divider>yoki</Divider>
+
+                <Form onSubmit={handleSubmit}>
                     <Field>
                         <Label htmlFor="signin-email">Email</Label>
                         <Input
@@ -98,6 +106,11 @@ const SignIn = () => {
                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </ToggleVisibility>
                         </InputWrap>
+                        <ForgotRow>
+                            <ForgotLink as={Link} to="/forgot-password">
+                                Parolni unutdingizmi?
+                            </ForgotLink>
+                        </ForgotRow>
                     </Field>
 
                     <SubmitButton type="submit" disabled={loading}>

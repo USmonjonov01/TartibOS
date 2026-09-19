@@ -232,3 +232,52 @@ export const BackButton = styled.button`
         color: ${colors.textSecondary};
     }
 `;
+
+export const Divider = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 18px;
+    color: ${colors.textMuted};
+    font-size: 12px;
+
+    &::before,
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: ${colors.hairline};
+    }
+`;
+
+export const ForgotRow = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+`;
+
+export const ForgotLink = styled.button`
+    background: none;
+    border: none;
+    color: ${colors.amber};
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
+export const InfoBanner = styled.div`
+    background: ${colors.amberSoft};
+    color: ${colors.textPrimary};
+    border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+    border-radius: ${tokens.radius.sm};
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 4px;
+    line-height: 1.5;
+`;

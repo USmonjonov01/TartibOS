@@ -289,7 +289,7 @@ export const PreviewCard = styled.div`
     border: 1px solid ${colors.border};
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
     overflow: hidden;
-    max-width: 960px;
+    max-width: 1115px;
     margin: 0 auto;
 `;
 
@@ -789,4 +789,259 @@ export const FAQAnswerInner = styled.p`
     font-size: 14px;
     color: ${colors.textMuted};
     line-height: 1.65;
+`;
+
+/* ---------- "Bu mening shaxsiy tizimimmi?" ishonch bo'limi ---------- */
+
+export const TrustSection = styled.section`
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+
+    @media (max-width: 768px) {
+        padding: 0 20px 56px;
+    }
+`;
+
+export const TrustBox = styled.div`
+    background: ${tokens.colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: 24px;
+    padding: 56px 48px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -120px;
+        right: -120px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(circle, ${colors.primaryLight} 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+        padding: 36px 24px;
+    }
+`;
+
+export const TrustHeader = styled.div`
+    max-width: 620px;
+    margin: 0 auto 44px;
+    text-align: center;
+    position: relative;
+`;
+
+export const TrustEyebrow = styled.div`
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: ${colors.primary};
+    text-transform: uppercase;
+    margin-bottom: 10px;
+`;
+
+export const TrustTitle = styled.h2`
+    font-family: ${tokens.font.display};
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 700;
+    color: ${colors.text};
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+`;
+
+export const TrustLead = styled.p`
+    font-size: 16px;
+    color: ${colors.textMuted};
+    line-height: 1.7;
+    margin: 0;
+`;
+
+export const TrustGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    position: relative;
+
+    @media (max-width: 900px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+export const TrustCard = styled.div`
+    background: ${colors.bg};
+    border: 1px solid ${colors.borderSubtle};
+    border-radius: 14px;
+    padding: 20px;
+`;
+
+export const TrustIconBox = styled.div`
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: ${colors.primaryLight};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+`;
+
+export const TrustCardTitle = styled.h4`
+    font-size: 14px;
+    font-weight: 700;
+    color: ${colors.text};
+    margin: 0 0 6px;
+`;
+
+export const TrustCardDesc = styled.p`
+    font-size: 13px;
+    color: ${colors.textMuted};
+    line-height: 1.6;
+    margin: 0;
+`;
+
+/* ---------- AI yo'l xaritasi (roadmap) bo'limi ---------- */
+
+export const AISection = styled.section`
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+
+    @media (max-width: 768px) {
+        padding: 0 20px 56px;
+    }
+`;
+
+export const AIHeader = styled.div`
+    max-width: 640px;
+    margin: 0 auto 48px;
+    text-align: center;
+`;
+
+export const AIBadge = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: ${colors.accentLight};
+    color: ${colors.text};
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: ${tokens.font.mono};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 16px;
+`;
+
+export const AITitle = styled.h2`
+    font-family: ${tokens.font.display};
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 700;
+    color: ${colors.text};
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+`;
+
+export const AIDesc = styled.p`
+    font-size: 16px;
+    color: ${colors.textMuted};
+    line-height: 1.7;
+    margin: 0;
+`;
+
+export const AITimeline = styled.div`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: stretch;
+
+    @media (max-width: 860px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+export const AIStageCard = styled.div`
+    background: ${tokens.colors.surface};
+    border: 1.5px solid ${(p) => (p.$status === "live" ? colors.primary : colors.border)};
+    border-radius: 16px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    ${(p) =>
+        p.$status === "live" &&
+        `box-shadow: 0 0 0 4px ${colors.primaryLight};`}
+`;
+
+export const AIStageStatus = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    font-family: ${tokens.font.mono};
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    color: ${(p) =>
+        p.$status === "live" ? colors.primary : p.$status === "next" ? colors.success : colors.textSubtle};
+    background: ${(p) =>
+        p.$status === "live" ? colors.primaryLight : p.$status === "next" ? colors.successLight : colors.borderSubtle};
+`;
+
+export const AIStageDot = styled.span`
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    ${(p) => p.$pulse && `animation: tos-ai-pulse 1.6s ease-in-out infinite;`}
+
+    @keyframes tos-ai-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+    }
+`;
+
+export const AIStageTitle = styled.h3`
+    font-size: 17px;
+    font-weight: 700;
+    color: ${colors.text};
+    margin: 0 0 10px;
+`;
+
+export const AIStageList = styled.ul`
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+`;
+
+export const AIStageItem = styled.li`
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 13.5px;
+    color: ${colors.textMuted};
+    line-height: 1.55;
+
+    svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: ${(p) => (p.$done ? colors.success : colors.textSubtle)};
+    }
 `;

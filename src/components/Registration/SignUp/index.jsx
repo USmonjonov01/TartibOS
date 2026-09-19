@@ -23,8 +23,10 @@ import {
     LinkButton,
     BackText,
     BackButton,
+    Divider,
 } from "./style";
 import { useUser } from "../../../context/users";
+import GoogleButton from "../GoogleButton";
 import TartibOSLogo from "../../../assets/icons/TartibOS1.png"
 
 
@@ -39,6 +41,7 @@ const SignUp = () => {
         parol_check: "",
     });
     const [mismatch, setMismatch] = useState(false);
+    const [googleError, setGoogleError] = useState("");
 
     const handleChange = (field) => (e) => {
         const { value } = e.target;
@@ -79,8 +82,11 @@ const SignUp = () => {
                     <Subtitle>TartibOS bilan intizomingizni boshlang</Subtitle>
                 </Header>
 
+                <GoogleButton label="signup_with" onError={() => setGoogleError("Google bilan ro'yxatdan o'tishda xatolik yuz berdi")} />
+                <Divider>yoki</Divider>
+
                 <Form onSubmit={handleSubmit}>
-                    {error && <ErrorBanner>{error}</ErrorBanner>}
+                    {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
 
                     <Field>
                         <Label htmlFor="signup-ism">Ism</Label>

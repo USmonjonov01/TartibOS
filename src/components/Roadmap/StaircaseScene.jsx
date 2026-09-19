@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MoreVertical, Pencil, Archive, ArchiveRestore, Trash2, X } from "lucide-react";
 import { getGoalLevel } from "../../context/goals";
 import {
@@ -6,11 +6,26 @@ import {
     GoalTitle,
     GoalMeta,
     StaircaseSvgBox,
+    LevelPanel,
+    LevelBadge,
+    LevelBadgeLabel,
+    LevelBadgeNum,
+    XPBarWrap,
+    XPBarTopRow,
+    XPBarStage,
+    XPBarCount,
+    XPBarTrack,
+    XPBarFill,
+    CelebrateOverlay,
+    CelebrateBurst,
+    CelebrateSub,
+    ConfettiPiece,
     StepList,
     StepRow,
     StepCheck,
     StepTitle,
     StepStage,
+    NextBadge,
     AddStepRow,
     AddStepInput,
     AddStepBtn,
@@ -26,6 +41,25 @@ import {
     SmallGhostButton,
     colors,
 } from "./style";
+
+const CONFETTI_COLORS = [colors.primary, colors.success, "#F4C575", "#6EE7B7"];
+
+// Konfetti bo'laklari — har bir "level up" portlashi uchun qayta generatsiya
+// qilinadi (burstId o'zgarganda), shu sabab CSS animatsiya har safar qaytadan
+// boshidan ishga tushadi.
+const makeConfetti = () =>
+    Array.from({ length: 16 }).map((_, i) => {
+        const angle = (Math.PI * 2 * i) / 16 + (Math.random() - 0.5) * 0.4;
+        const dist = 60 + Math.random() * 70;
+        return {
+            id: i,
+            x: Math.cos(angle) * dist,
+            y: Math.sin(angle) * dist - 20,
+            rot: Math.round((Math.random() - 0.5) * 360),
+            delay: Math.random() * 0.12,
+            color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        };
+    });
 
 // Zinapoya dizayni — har bir bosqich alohida "pog'ona" (tread) sifatida
 // chiziladi, chapdan (poydevor) o'ngga-yuqoriga (cho'qqi/goal) qarab
@@ -97,6 +131,30 @@ function StaircaseScene({
         markerY = treadTopY(nextStepIndex - 1) - 14;
     }
 
+    // "LEVEL UP!" portlashi — bosqich soni oshganda (ya'ni yangi bosqich
+    // bajarilganda) 1.3 soniyaga konfetti + katta "LEVEL UP!" matni chiqadi.
+    // Bosqich bekor qilinganda (completedCount kamayganda) hech narsa
+    // ko'rsatilmaydi — faqat progress oldinga ketganda nishonlanadi.
+    const [celebrate, setCelebrate] = useState(false);
+    const [burstId, setBurstId] = useState(0);
+    const prevCompletedRef = useRef(completedCount);
+
+    useEffect(() => {
+        if (completedCount > prevCompletedRef.current) {
+            setCelebrate(true);
+            setBurstId((id) => id + 1);
+            const t = setTimeout(() => setCelebrate(false), 1300);
+            prevCompletedRef.current = completedCount;
+            return () => clearTimeout(t);
+        }
+        prevCompletedRef.current = completedCount;
+    }, [completedCount]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- burstId ataylab dependency: har safar o'zgarganda konfetti qayta generatsiya qilinishi kerak
+    const confetti = useMemo(() => makeConfetti(), [burstId]);
+    const xpPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+    const level = getGoalLevel(goal);
+
     const handleAddStep = (e) => {
         e.preventDefault();
         const title = newStepTitle.trim();
@@ -158,7 +216,7 @@ function StaircaseScene({
                     </div>
                 </div>
                 <GoalMeta>
-                    Lv {getGoalLevel(goal)} · {completedCount}/{total} bosqich
+                    {completedCount}/{total} bosqich
                 </GoalMeta>
                 <MenuWrap>
                     <MenuButton onClick={() => setMenuOpen((v) => !v)}>
@@ -207,7 +265,41 @@ function StaircaseScene({
                 </MenuWrap>
             </GoalHeaderRow>
 
+            <LevelPanel>
+                <LevelBadge>
+                    <LevelBadgeLabel>Lvl</LevelBadgeLabel>
+                    <LevelBadgeNum>{level}</LevelBadgeNum>
+                </LevelBadge>
+                <XPBarWrap>
+                    <XPBarTopRow>
+                        <XPBarStage>{currentStage}</XPBarStage>
+                        <XPBarCount>{completedCount}/{total || 0} XP</XPBarCount>
+                    </XPBarTopRow>
+                    <XPBarTrack>
+                        <XPBarFill $pct={xpPct} />
+                    </XPBarTrack>
+                </XPBarWrap>
+            </LevelPanel>
+
             <StaircaseSvgBox>
+                <CelebrateOverlay $show={celebrate}>
+                    <CelebrateBurst key={burstId} $show={celebrate}>
+                        LEVEL UP!
+                    </CelebrateBurst>
+                    <CelebrateSub $show={celebrate}>Lvl {level} — {currentStage}</CelebrateSub>
+                    {confetti.map((c) => (
+                        <ConfettiPiece
+                            key={`${burstId}-${c.id}`}
+                            $show={celebrate}
+                            $x={c.x}
+                            $y={c.y}
+                            $rot={c.rot}
+                            $delay={c.delay}
+                            $color={c.color}
+                        />
+                    ))}
+                </CelebrateOverlay>
+
                 <svg viewBox="0 0 400 300" width="100%" height="100%">
                     <defs>
                         <linearGradient id={`stepFillDone-${goal.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -388,51 +480,59 @@ function StaircaseScene({
             </StaircaseSvgBox>
 
             <StepList>
-                {steps.map((step) => (
-                    <StepRow key={step.id} onClick={() => editingStepId !== step.id && onToggleStep(goal.id, step.id)}>
-                        <StepCheck $done={step.completed}>
-                            {step.completed && (
-                                <svg width="10" height="10" viewBox="0 0 10 10">
-                                    <path
-                                        d="M1.5,5.2 L4,7.7 L8.5,2.2"
-                                        fill="none"
-                                        stroke="#fff"
-                                        strokeWidth="1.6"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                            )}
-                        </StepCheck>
+                {steps.map((step, i) => {
+                    const isNext = i === nextStepIndex;
+                    return (
+                        <StepRow
+                            key={step.id}
+                            $next={isNext}
+                            onClick={() => editingStepId !== step.id && onToggleStep(goal.id, step.id)}
+                        >
+                            <StepCheck $done={step.completed} $next={isNext}>
+                                {step.completed && (
+                                    <svg width="10" height="10" viewBox="0 0 10 10">
+                                        <path
+                                            d="M1.5,5.2 L4,7.7 L8.5,2.2"
+                                            fill="none"
+                                            stroke="#fff"
+                                            strokeWidth="1.6"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                )}
+                            </StepCheck>
 
-                        {editingStepId === step.id ? (
-                            <StepEditInput
-                                autoFocus
-                                value={stepDraft}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => setStepDraft(e.target.value)}
-                                onBlur={() => submitStepEdit(step)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") submitStepEdit(step);
-                                    if (e.key === "Escape") setEditingStepId(null);
-                                }}
-                            />
-                        ) : (
-                            <>
-                                <StepTitle $done={step.completed}>{step.title}</StepTitle>
-                                {step.stageLabel && <StepStage>{step.stageLabel}</StepStage>}
-                                <StepActions onClick={(e) => e.stopPropagation()}>
-                                    <StepIconBtn onClick={() => startEditStep(step)}>
-                                        <Pencil size={12} />
-                                    </StepIconBtn>
-                                    <StepIconBtn $danger onClick={() => onRequestDeleteStep(goal.id, step)}>
-                                        <X size={13} />
-                                    </StepIconBtn>
-                                </StepActions>
-                            </>
-                        )}
-                    </StepRow>
-                ))}
+                            {editingStepId === step.id ? (
+                                <StepEditInput
+                                    autoFocus
+                                    value={stepDraft}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => setStepDraft(e.target.value)}
+                                    onBlur={() => submitStepEdit(step)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") submitStepEdit(step);
+                                        if (e.key === "Escape") setEditingStepId(null);
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    <StepTitle $done={step.completed} $next={isNext}>{step.title}</StepTitle>
+                                    {step.stageLabel && <StepStage>{step.stageLabel}</StepStage>}
+                                    {isNext && <NextBadge>Navbatdagi</NextBadge>}
+                                    <StepActions onClick={(e) => e.stopPropagation()}>
+                                        <StepIconBtn onClick={() => startEditStep(step)}>
+                                            <Pencil size={12} />
+                                        </StepIconBtn>
+                                        <StepIconBtn $danger onClick={() => onRequestDeleteStep(goal.id, step)}>
+                                            <X size={13} />
+                                        </StepIconBtn>
+                                    </StepActions>
+                                </>
+                            )}
+                        </StepRow>
+                    );
+                })}
             </StepList>
 
             <AddStepRow onSubmit={handleAddStep}>

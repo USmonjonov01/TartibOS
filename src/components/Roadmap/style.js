@@ -168,48 +168,222 @@ export const GoalMeta = styled.span`
 
 export const StaircaseSvgBox = styled.div`
     width: 100%;
-    aspect-ratio: 4 / 3;
-    max-height: 340px;
+    aspect-ratio: 16 / 11;
+    max-height: 460px;
+    position: relative;
+`;
+
+/* --- Level badge + XP bar (o'yinsimon holat paneli) --- */
+
+export const LevelPanel = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    border-radius: ${tokens.radius.lg};
+    background: linear-gradient(135deg, ${colors.primaryLight} 0%, transparent 100%);
+    border: 1px solid ${colors.border};
+`;
+
+export const LevelBadge = styled.div`
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    flex: 0 0 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, ${colors.primary} 0%, ${tokens.colors.amberStrong} 100%);
+    box-shadow: 0 6px 18px ${colors.primaryLight};
+`;
+
+export const LevelBadgeLabel = styled.span`
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: ${tokens.colors.bg};
+    opacity: 0.85;
+    text-transform: uppercase;
+`;
+
+export const LevelBadgeNum = styled.span`
+    font-family: ${tokens.font.mono};
+    font-size: 20px;
+    font-weight: 800;
+    color: ${tokens.colors.bg};
+    line-height: 1;
+`;
+
+export const XPBarWrap = styled.div`
+    flex: 1;
+    min-width: 0;
+`;
+
+export const XPBarTopRow = styled.div`
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 8px;
+`;
+
+export const XPBarStage = styled.div`
+    font-size: 13px;
+    font-weight: 700;
+    color: ${colors.text};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+export const XPBarCount = styled.div`
+    font-family: ${tokens.font.mono};
+    font-size: 11.5px;
+    color: ${colors.textSubtle};
+    white-space: nowrap;
+`;
+
+export const XPBarTrack = styled.div`
+    width: 100%;
+    height: 9px;
+    border-radius: 6px;
+    background: ${colors.borderSubtle};
+    overflow: hidden;
+`;
+
+export const XPBarFill = styled.div`
+    height: 100%;
+    border-radius: 6px;
+    width: ${(p) => p.$pct}%;
+    background: linear-gradient(90deg, ${tokens.colors.amberStrong} 0%, ${colors.primary} 100%);
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
+/* --- "LEVEL UP!" portlash animatsiyasi (bosqich bajarilganda) --- */
+
+export const CelebrateOverlay = styled.div`
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+    opacity: ${(p) => (p.$show ? 1 : 0)};
+    transition: opacity 0.25s ease;
+`;
+
+export const CelebrateBurst = styled.div`
+    font-size: 42px;
+    font-weight: 900;
+    font-family: ${tokens.font.display};
+    letter-spacing: -0.01em;
+    color: ${colors.primary};
+    text-shadow: 0 4px 24px ${colors.primaryLight};
+    animation: ${(p) => (p.$show ? "tos-levelup-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1)" : "none")};
+
+    @keyframes tos-levelup-pop {
+        0% { transform: scale(0.4) translateY(10px); opacity: 0; }
+        35% { transform: scale(1.15) translateY(0); opacity: 1; }
+        55% { transform: scale(1); }
+        80% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(1.05); opacity: 0; }
+    }
+`;
+
+export const CelebrateSub = styled.div`
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: ${colors.text};
+    background: ${colors.surface};
+    border: 1px solid ${colors.border};
+    padding: 4px 14px;
+    border-radius: 20px;
+    opacity: ${(p) => (p.$show ? 1 : 0)};
+    transform: translateY(${(p) => (p.$show ? "0" : "6px")});
+    transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
+`;
+
+export const ConfettiPiece = styled.span`
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    width: 7px;
+    height: 10px;
+    background: ${(p) => p.$color};
+    border-radius: 2px;
+    opacity: ${(p) => (p.$show ? 1 : 0)};
+    animation: ${(p) => (p.$show ? `tos-confetti-fly 0.9s ease-out forwards` : "none")};
+    animation-delay: ${(p) => p.$delay}s;
+    --tx: ${(p) => p.$x}px;
+    --ty: ${(p) => p.$y}px;
+    --rot: ${(p) => p.$rot}deg;
+
+    @keyframes tos-confetti-fly {
+        0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+        100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot)); opacity: 0; }
+    }
 `;
 
 export const StepList = styled.ul`
     list-style: none;
-    margin: 18px 0 0;
+    margin: 20px 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 `;
 
 export const StepRow = styled.li`
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
+    gap: 12px;
+    padding: 13px 14px;
     border-radius: ${tokens.radius.md};
-    background: ${(p) => (p.$active ? colors.primaryLight : "transparent")};
+    background: ${(p) => (p.$next ? colors.primaryLight : p.$active ? colors.primaryLight : "transparent")};
+    border: 1.5px solid ${(p) => (p.$next ? colors.primary : "transparent")};
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
 
     &:hover {
         background: ${colors.surfaceRaised};
     }
 `;
 
+export const NextBadge = styled.span`
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: ${tokens.font.mono};
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: ${tokens.colors.bg};
+    background: ${colors.primary};
+    padding: 3px 9px;
+    border-radius: 12px;
+`;
+
 export const StepCheck = styled.span`
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    flex: 0 0 20px;
+    flex: 0 0 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid ${(p) => (p.$done ? colors.success : colors.border)};
+    border: 2px solid ${(p) => (p.$done ? colors.success : p.$next ? colors.primary : colors.border)};
     background: ${(p) => (p.$done ? colors.success : "transparent")};
     color: ${tokens.colors.bg};
 `;
 
 export const StepTitle = styled.span`
-    font-size: 13.5px;
+    font-size: 14px;
+    font-weight: ${(p) => (p.$next ? 700 : 500)};
     color: ${(p) => (p.$done ? colors.textMuted : colors.text)};
     text-decoration: ${(p) => (p.$done ? "line-through" : "none")};
 `;

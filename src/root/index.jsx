@@ -5,6 +5,9 @@ import Sidebar from "../components/Sidebar"
 import Home from "../components/Home"
 import SignInForm from "../components/Registration/SignIn"
 import SignUpForm from "../components/Registration/SignUp"
+import ForgotPassword from "../components/Registration/ForgotPassword"
+import ResetPassword from "../components/Registration/ResetPassword"
+import VerifyEmail from "../components/Registration/VerifyEmail"
 import NotFound from "../components/NotFound"
 import TelegramApp from "../components/TelegramApp"
 
@@ -26,6 +29,9 @@ function Root() {
 
                <Route path="sign-in" element={<SignInForm />} />
                <Route path="sign-up" element={<SignUpForm />} />
+               <Route path="forgot-password" element={<ForgotPassword />} />
+               <Route path="reset-password" element={<ResetPassword />} />
+               <Route path="verify-email" element={<VerifyEmail />} />
 
                {/* Login qilmagan foydalanuvchi (va qidiruv botlari) uchun "/" darhol
                    marketing sahifasini ko'rsatadi — ikki bosqichli redirect (avval
