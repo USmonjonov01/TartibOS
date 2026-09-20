@@ -14,6 +14,35 @@ export const Wrapper = styled.div`
     font-family: ${font.body};
 `;
 
+// SplitWrapper — faqat SignIn (va SignUp) uchun, ikki ustunli maket.
+// Diqqat: ForgotPassword/ResetPassword/VerifyEmail sahifalari hali ham
+// yuqoridagi oddiy "Wrapper"dan foydalanadi (ular bitta markazlashgan
+// Card bilan ishlaydi) — shu sabab bu yerga YANGI eksport qo'shilyapti,
+// eskisi o'zgartirilmayapti.
+export const SplitWrapper = styled.div`
+    min-height: 100vh;
+    display: flex;
+    font-family: ${font.body};
+`;
+
+export const FormPane = styled.div`
+    flex: 1 1 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    background: radial-gradient(ellipse 900px 500px at 15% -10%, ${colors.surfaceRaised} 0%, ${colors.bg} 55%);
+
+    @media (max-width: 480px) {
+        padding: 32px 20px;
+    }
+`;
+
+export const FormInner = styled.div`
+    width: 100%;
+    max-width: 380px;
+`;
+
 export const Card = styled.div`
     width: 100%;
     max-width: 400px;
@@ -250,10 +279,16 @@ export const Divider = styled.div`
     }
 `;
 
-export const ForgotRow = styled.div`
+export const LabelRow = styled.div`
     display: flex;
-    justify-content: flex-end;
-    margin-top: -4px;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+
+    ${Label} {
+        margin-bottom: 0;
+    }
 `;
 
 export const ForgotLink = styled.button`

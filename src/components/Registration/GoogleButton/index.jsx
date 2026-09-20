@@ -89,14 +89,27 @@ const GoogleButton = ({ label = "continue_with", onError }) => {
 
                 ensureInitialized();
 
+                // Kenglikni konteynerning haqiqiy render qilingan
+                // kengligidan olamiz (email/parol maydonlari bilan bir xil
+                // kengga chiqishi uchun) — Google'ning renderButton'i
+                // piksellarda aniq son talab qiladi, foizda emas.
+                // Google 400px'dan kattaroqni qabul qilmaydi.
+                const measuredWidth = Math.round(wrapRef.current.getBoundingClientRect().width);
+                const width = Math.min(Math.max(measuredWidth || 320, 200), 400);
+
                 window.google.accounts.id.renderButton(wrapRef.current, {
                     type: "standard",
-                    theme: "outline",
+                    // TartibOS qorong'u fonига oq/kulrang "outline" tugma
+                    // yaxshi mos kelmasdi — Google rasmiy taqdim etgan
+                    // variantlar orasidan "filled_black" temaviy jihatdan
+                    // eng mos keladigani (Google branding qoidalari to'liq
+                    // maxsus rang berishga ruxsat bermaydi).
+                    theme: "filled_black",
                     size: "large",
                     shape: "pill",
                     text: label,
                     logo_alignment: "center",
-                    width: 320,
+                    width,
                 });
             })
             .catch((err) => onErrorRef.current?.(err));

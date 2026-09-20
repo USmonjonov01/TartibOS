@@ -6,26 +6,26 @@ export const font = tokens.font;
 
 export const Wrapper = styled.div`
     min-height: 100vh;
-    background: radial-gradient(ellipse 900px 500px at 15% -10%, ${colors.surfaceRaised} 0%, ${colors.bg} 55%);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
     font-family: ${font.body};
 `;
 
-export const Card = styled.div`
-    width: 100%;
-    max-width: 400px;
-    background: ${colors.surface};
-    border-radius: ${tokens.radius.lg};
-    border: 1px solid ${colors.hairline};
-    padding: 40px 36px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+export const FormPane = styled.div`
+    flex: 1 1 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    background: radial-gradient(ellipse 900px 500px at 15% -10%, ${colors.surfaceRaised} 0%, ${colors.bg} 55%);
 
     @media (max-width: 480px) {
-        padding: 32px 24px;
+        padding: 32px 20px;
     }
+`;
+
+export const FormInner = styled.div`
+    width: 100%;
+    max-width: 380px;
 `;
 
 export const Header = styled.div`

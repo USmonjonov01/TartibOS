@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import {
-    Wrapper,
-    Card,
+    SplitWrapper,
+    FormPane,
+    FormInner,
     Header,
     LogoRow,
     LogoIcon,
@@ -23,11 +24,12 @@ import {
     BackText,
     BackButton,
     Divider,
-    ForgotRow,
+    LabelRow,
     ForgotLink,
 } from "./style";
 import { useUser } from "../../../context/users";
 import GoogleButton from "../GoogleButton";
+import SidePanel from "../SidePanel";
 import TartibOSLogo from "../../../assets/icons/TartibOS1.png"
 
 const SignIn = () => {
@@ -53,84 +55,88 @@ const SignIn = () => {
     };
 
     return (
-        <Wrapper>
-            <Card>
-                <Header>
-                    <LogoRow>
-                        <LogoIcon>
-                            <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
-                        </LogoIcon>
-                        <LogoText>TartibOS</LogoText>
-                    </LogoRow>
-                    <Title>Xush kelibsiz</Title>
-                    <Subtitle>Hisobingizga kiring</Subtitle>
-                </Header>
+        <SplitWrapper>
+            <FormPane>
+                <FormInner>
+                    <Header>
+                        <LogoRow>
+                            <LogoIcon>
+                                <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
+                            </LogoIcon>
+                            <LogoText>TartibOS</LogoText>
+                        </LogoRow>
+                        <Title>Xush kelibsiz</Title>
+                        <Subtitle>Hisobingizga kiring</Subtitle>
+                    </Header>
 
-                {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
+                    {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
 
-                <GoogleButton label="signin_with" onError={() => setGoogleError("Google bilan kirishda xatolik yuz berdi")} />
-                <Divider>yoki</Divider>
+                    <GoogleButton label="signin_with" onError={() => setGoogleError("Google bilan kirishda xatolik yuz berdi")} />
+                    <Divider>yoki</Divider>
 
-                <Form onSubmit={handleSubmit}>
-                    <Field>
-                        <Label htmlFor="signin-email">Email</Label>
-                        <Input
-                            id="signin-email"
-                            type="email"
-                            placeholder="email@example.com"
-                            value={form.email}
-                            onChange={handleChange("email")}
-                            autoComplete="email"
-                            required
-                        />
-                    </Field>
-
-                    <Field>
-                        <Label htmlFor="signin-parol">Parol</Label>
-                        <InputWrap>
+                    <Form onSubmit={handleSubmit}>
+                        <Field>
+                            <Label htmlFor="signin-email">Email</Label>
                             <Input
-                                id="signin-parol"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="••••••••"
-                                value={form.parol}
-                                onChange={handleChange("parol")}
-                                autoComplete="current-password"
-                                $hasIcon
+                                id="signin-email"
+                                type="email"
+                                placeholder="email@example.com"
+                                value={form.email}
+                                onChange={handleChange("email")}
+                                autoComplete="email"
                                 required
                             />
-                            <ToggleVisibility
-                                type="button"
-                                onClick={() => setShowPassword((s) => !s)}
-                                aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
-                            >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </ToggleVisibility>
-                        </InputWrap>
-                        <ForgotRow>
-                            <ForgotLink as={Link} to="/forgot-password">
-                                Parolni unutdingizmi?
-                            </ForgotLink>
-                        </ForgotRow>
-                    </Field>
+                        </Field>
 
-                    <SubmitButton type="submit" disabled={loading}>
-                        {loading ? "Kirilmoqda..." : "Kirish"}
-                    </SubmitButton>
-                </Form>
+                        <Field>
+                            <LabelRow>
+                                <Label htmlFor="signin-parol">Parol</Label>
+                                <ForgotLink as={Link} to="/forgot-password">
+                                    Parolni unutdingizmi?
+                                </ForgotLink>
+                            </LabelRow>
+                            <InputWrap>
+                                <Input
+                                    id="signin-parol"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={form.parol}
+                                    onChange={handleChange("parol")}
+                                    autoComplete="current-password"
+                                    $hasIcon
+                                    required
+                                />
+                                <ToggleVisibility
+                                    type="button"
+                                    onClick={() => setShowPassword((s) => !s)}
+                                    aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </ToggleVisibility>
+                            </InputWrap>
+                        </Field>
 
-                <FooterText>
-                    Hisobingiz yo'qmi?{" "}
-                    <LinkButton as={Link} to="/sign-up">
-                        Ro'yxatdan o'ting
-                    </LinkButton>
-                </FooterText>
-                <BackText>
-                    <BackButton as={Link} to="/home">
-                        ← Bosh sahifaga
-                    </BackButton>
-                </BackText>
-            </Card>
-        </Wrapper>
+                        <SubmitButton type="submit" disabled={loading}>
+                            {loading ? "Kirilmoqda..." : "Kirish"}
+                        </SubmitButton>
+                    </Form>
+
+                    <FooterText>
+                        Hisobingiz yo'qmi?{" "}
+                        <LinkButton as={Link} to="/sign-up">
+                            Ro'yxatdan o'ting
+                        </LinkButton>
+                    </FooterText>
+                    <BackText>
+                        <BackButton as={Link} to="/home">
+                            ← Bosh sahifaga
+                        </BackButton>
+                    </BackText>
+                </FormInner>
+            </FormPane>
+
+            <SidePanel />
+        </SplitWrapper>
     );
 };
 

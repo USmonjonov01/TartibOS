@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import {
     Wrapper,
-    Card,
+    FormPane,
+    FormInner,
     Header,
     LogoRow,
     LogoIcon,
@@ -27,8 +28,8 @@ import {
 } from "./style";
 import { useUser } from "../../../context/users";
 import GoogleButton from "../GoogleButton";
+import SidePanel from "../SidePanel";
 import TartibOSLogo from "../../../assets/icons/TartibOS1.png"
-
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -70,105 +71,109 @@ const SignUp = () => {
 
     return (
         <Wrapper>
-            <Card>
-                <Header>
-                    <LogoRow>
-                        <LogoIcon>
-                            <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
-                        </LogoIcon>
-                        <LogoText>TartibOS</LogoText>
-                    </LogoRow>
-                    <Title>Hisob yaratish</Title>
-                    <Subtitle>TartibOS bilan intizomingizni boshlang</Subtitle>
-                </Header>
+            <FormPane>
+                <FormInner>
+                    <Header>
+                        <LogoRow>
+                            <LogoIcon>
+                                <img width="100%" style={{ overflow: "hidden", borderRadius: "6px" }} src={TartibOSLogo} alt="TartibOS" />
+                            </LogoIcon>
+                            <LogoText>TartibOS</LogoText>
+                        </LogoRow>
+                        <Title>Hisob yaratish</Title>
+                        <Subtitle>TartibOS bilan intizomingizni boshlang</Subtitle>
+                    </Header>
 
-                <GoogleButton label="signup_with" onError={() => setGoogleError("Google bilan ro'yxatdan o'tishda xatolik yuz berdi")} />
-                <Divider>yoki</Divider>
+                    <GoogleButton label="signup_with" onError={() => setGoogleError("Google bilan ro'yxatdan o'tishda xatolik yuz berdi")} />
+                    <Divider>yoki</Divider>
 
-                <Form onSubmit={handleSubmit}>
-                    {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
+                    <Form onSubmit={handleSubmit}>
+                        {(error || googleError) && <ErrorBanner>{error || googleError}</ErrorBanner>}
 
-                    <Field>
-                        <Label htmlFor="signup-ism">Ism</Label>
-                        <Input
-                            id="signup-ism"
-                            placeholder="To'liq ismingiz"
-                            value={form.ism}
-                            onChange={handleChange("ism")}
-                            autoComplete="name"
-                            required
-                        />
-                    </Field>
-
-                    <Field>
-                        <Label htmlFor="signup-email">Email</Label>
-                        <Input
-                            id="signup-email"
-                            type="email"
-                            placeholder="email@example.com"
-                            value={form.email}
-                            onChange={handleChange("email")}
-                            autoComplete="email"
-                            required
-                        />
-                    </Field>
-
-                    <Field>
-                        <Label htmlFor="signup-parol">Parol</Label>
-                        <InputWrap>
+                        <Field>
+                            <Label htmlFor="signup-ism">Ism</Label>
                             <Input
-                                id="signup-parol"
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Kamida 8 ta belgi"
-                                value={form.parol}
-                                onChange={handleChange("parol")}
-                                autoComplete="new-password"
-                                minLength={8}
-                                $hasIcon
+                                id="signup-ism"
+                                placeholder="To'liq ismingiz"
+                                value={form.ism}
+                                onChange={handleChange("ism")}
+                                autoComplete="name"
                                 required
                             />
-                            <ToggleVisibility
-                                type="button"
-                                onClick={() => setShowPassword((s) => !s)}
-                                aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
-                            >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </ToggleVisibility>
-                        </InputWrap>
-                    </Field>
+                        </Field>
 
-                    <Field>
-                        <Label htmlFor="signup-parol-check">Parolni tasdiqlang</Label>
-                        <Input
-                            id="signup-parol-check"
-                            type="password"
-                            placeholder="Parolni qayta kiriting"
-                            value={form.parol_check}
-                            onChange={handleChange("parol_check")}
-                            autoComplete="new-password"
-                            $error={mismatch}
-                            required
-                        />
-                        {mismatch && <ErrorText>Parollar mos kelmadi</ErrorText>}
-                    </Field>
+                        <Field>
+                            <Label htmlFor="signup-email">Email</Label>
+                            <Input
+                                id="signup-email"
+                                type="email"
+                                placeholder="email@example.com"
+                                value={form.email}
+                                onChange={handleChange("email")}
+                                autoComplete="email"
+                                required
+                            />
+                        </Field>
 
-                    <SubmitButton type="submit" disabled={loading}>
-                        {loading ? "Yaratilmoqda..." : "Hisob yaratish"}
-                    </SubmitButton>
-                </Form>
+                        <Field>
+                            <Label htmlFor="signup-parol">Parol</Label>
+                            <InputWrap>
+                                <Input
+                                    id="signup-parol"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Kamida 8 ta belgi"
+                                    value={form.parol}
+                                    onChange={handleChange("parol")}
+                                    autoComplete="new-password"
+                                    minLength={8}
+                                    $hasIcon
+                                    required
+                                />
+                                <ToggleVisibility
+                                    type="button"
+                                    onClick={() => setShowPassword((s) => !s)}
+                                    aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </ToggleVisibility>
+                            </InputWrap>
+                        </Field>
 
-                <FooterText>
-                    Hisobingiz bormi?{" "}
-                    <LinkButton as={Link} to="/sign-in">
-                        Kirish
-                    </LinkButton>
-                </FooterText>
-                <BackText>
-                    <BackButton as={Link} to="/home">
-                        ← Bosh sahifaga
-                    </BackButton>
-                </BackText>
-            </Card>
+                        <Field>
+                            <Label htmlFor="signup-parol-check">Parolni tasdiqlang</Label>
+                            <Input
+                                id="signup-parol-check"
+                                type="password"
+                                placeholder="Parolni qayta kiriting"
+                                value={form.parol_check}
+                                onChange={handleChange("parol_check")}
+                                autoComplete="new-password"
+                                $error={mismatch}
+                                required
+                            />
+                            {mismatch && <ErrorText>Parollar mos kelmadi</ErrorText>}
+                        </Field>
+
+                        <SubmitButton type="submit" disabled={loading}>
+                            {loading ? "Yaratilmoqda..." : "Hisob yaratish"}
+                        </SubmitButton>
+                    </Form>
+
+                    <FooterText>
+                        Hisobingiz bormi?{" "}
+                        <LinkButton as={Link} to="/sign-in">
+                            Kirish
+                        </LinkButton>
+                    </FooterText>
+                    <BackText>
+                        <BackButton as={Link} to="/home">
+                            ← Bosh sahifaga
+                        </BackButton>
+                    </BackText>
+                </FormInner>
+            </FormPane>
+
+            <SidePanel />
         </Wrapper>
     );
 };
