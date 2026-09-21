@@ -182,7 +182,9 @@ export const UserProvider = ({ children }) => {
             );
             persistSession(data.user, data.token);
             dispatch({ type: "AUTH_SUCCESS", payload: data.user });
-            return data.user;
+            // Backend yangi hisob yaratilganini `isNewUser` bilan bildiradi — shunga
+            // qarab yangi foydalanuvchi onboarding'ga yo'naltiriladi.
+            return { ...data.user, isNewUser: Boolean(data.isNewUser) };
         } catch (err) {
             const message = err.response?.data?.message || err.message || "Google bilan kirishda xatolik";
             dispatch({ type: "AUTH_ERROR", payload: message });

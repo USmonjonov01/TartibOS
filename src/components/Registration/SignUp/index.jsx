@@ -63,7 +63,7 @@ const SignUp = () => {
 
         try {
             await register(form);
-            navigate("/dashboard");
+            navigate("/onboarding"); // yangi foydalanuvchi avval maqsad qo'yadi
         } catch {
             // xatolik context ichida "error" holatiga yoziladi va yuqorida ko'rsatiladi
         }

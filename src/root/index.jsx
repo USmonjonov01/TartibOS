@@ -10,6 +10,7 @@ import ResetPassword from "../components/Registration/ResetPassword"
 import VerifyEmail from "../components/Registration/VerifyEmail"
 import NotFound from "../components/NotFound"
 import TelegramApp from "../components/TelegramApp"
+import Onboarding from "../components/Onboarding"
 
 function Root() {
      const isAuthed = Boolean(localStorage.getItem("token"))
@@ -18,6 +19,7 @@ function Root() {
           <Routes>
                <Route path="/home" element={<Home />} />
                <Route path="/telegram-app" element={<TelegramApp />} />
+               <Route path="/onboarding" element={<PrivateRoutes> <Onboarding /> </PrivateRoutes>} />
 
                <Route element={<Sidebar />}>
                     {

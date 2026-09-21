@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useReducer } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer } from "react";
 import { routineApi } from "../../axios";
 import { useUser } from "../users";
 import { filterByOwner } from "../../utils/ownership";
@@ -9,6 +9,12 @@ const WeeksContext = createContext(null);
 export const WeeksProvider = ({ children }) => {
     const [state, dispatch] = useReducer(weeksReducer, initialState);
     const { user } = useUser();
+
+    useEffect(() => {
+        // User almashganda (logout → yangi ro'yxatdan o'tish, sahifa yangilanmasdan) oldingi
+        // foydalanuvchi ma'lumoti yangisiga ko'rinib, bildirishnomalarni ham buzmasligi uchun tozalaymiz.
+        dispatch({ type: "WEEKS_RESET" });
+    }, [user?.id]);
 
     const fetchWeeks = useCallback(async () => {
         if (!user) return [];

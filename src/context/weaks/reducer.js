@@ -12,6 +12,9 @@ export const weeksReducer = (state, action) => {
         case "WEEKS_SUCCESS":
             return { ...state, loading: false, weeks: action.payload };
 
+        case "WEEKS_RESET":
+            return initialState;
+
         case "WEEKS_ERROR":
             return { ...state, loading: false, error: action.payload };
 

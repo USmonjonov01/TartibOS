@@ -10,6 +10,8 @@ export const goalReducer = (state, action) => {
             return { ...state, loading: true, error: null };
         case "GOAL_SUCCESS":
             return { ...state, loading: false, goals: action.payload };
+        case "GOAL_RESET":
+            return initialState;
         case "GOAL_ERROR":
             return { ...state, loading: false, error: action.payload };
         default:

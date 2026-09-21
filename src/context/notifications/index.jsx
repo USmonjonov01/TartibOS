@@ -124,6 +124,15 @@ export const NotificationsProvider = ({ children }) => {
 
         getTodayHabits(routines, now).forEach((habit) => {
             if (!habit.end || currentHHMM <= habit.end) return;
+            // Tungi odat (masalan Uyqu 22:00–06:00): tugash vaqti ertangi kunga tushadi,
+            // shuning uchun bugun kunduzi "muddati o'tdi" deyish noto'g'ri.
+            if (habit.start && habit.end <= habit.start) return;
+            // Odat bugun, o'z vaqti allaqachon o'tib bo'lgach yaratilgan bo'lsa (masalan AI
+            // ertalabki odatni tushdan keyin tuzgan) — foydalanuvchi uni o'tkazib yubora olmagan.
+            if (habit.createdAt) {
+                const created = new Date(habit.createdAt);
+                if (getDateStr(created) === todayDateStr && created.toTimeString().slice(0, 5) > habit.end) return;
+            }
             if (completedToday.has(habitKey(habit))) return;
             pushNotification("habit-missed", {
                 description: `"${habit.title}" uchun belgilangan vaqt (${habit.end}) o'tib ketdi, hali bajarilmagan.`,
@@ -172,6 +181,12 @@ export const NotificationsProvider = ({ children }) => {
             });
         }
     }, [user, routines, weeks, pushNotification]);
+
+    // Foydalanuvchi almashganda oldingi foydalanuvchining missiyalari qolib ketmasin
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- foydalanuvchi almashganda holatni tozalash
+        setMissions([]);
+    }, [user?.id]);
 
     // Foydalanuvchi tizimga kirganda ma'lumotlarni tayyorlaymiz va muntazam yangilaymiz
     useEffect(() => {

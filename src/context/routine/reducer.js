@@ -12,6 +12,9 @@ export const routineReducer = (state, action) => {
         case "ROUTINE_SUCCESS":
             return { ...state, loading: false, routines: action.payload };
 
+        case "ROUTINE_RESET":
+            return initialState;
+
         case "ROUTINE_ERROR":
             return { ...state, loading: false, error: action.payload };
 

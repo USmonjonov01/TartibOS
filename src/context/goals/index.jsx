@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useReducer } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer } from "react";
 import { goalApi } from "../../axios";
 import { useUser } from "../users";
 import { useNotifications } from "../notifications";
@@ -34,6 +34,12 @@ export const GoalProvider = ({ children }) => {
     const { user } = useUser();
     const { notifyGoalLevelUp } = useNotifications();
 
+    useEffect(() => {
+        // User almashganda (logout → yangi ro'yxatdan o'tish, sahifa yangilanmasdan) oldingi
+        // foydalanuvchi ma'lumoti yangisiga ko'rinib, bildirishnomalarni ham buzmasligi uchun tozalaymiz.
+        dispatch({ type: "GOAL_RESET" });
+    }, [user?.id]);
+
     const fetchGoals = useCallback(async () => {
         if (!user) return [];
         dispatch({ type: "GOAL_LOADING" });
@@ -53,8 +59,25 @@ export const GoalProvider = ({ children }) => {
     // kaliti sozlanmagan), Error tashlaydi — chaqiruvchi tomon "bo'sh, o'zim
     // qo'shaman"ga tushib qolishi kerak.
     const generateSteps = useCallback(async (title) => {
-        const { data } = await goalApi.post("/goals/generate", { title });
+        const { data } = await goalApi.post(
+            "/goals/generate",
+            { title },
+            { meta: { label: "AI yo'l xaritasi", silent: true } }
+        );
         return data.steps || [];
+    }, []);
+
+    // Maqsadga mos kun tartibini AI tuzadi va serverning o'zi Routine
+    // yozuvlari sifatida SAQLAYDI (preview yo'q — foydalanuvchi oldindan
+    // tasdiqlagan bo'ladi). Yaratilgan odatlar ro'yxatini qaytaradi.
+    // Routine sahifasi/Dashboard o'z holatini fetchRoutines() orqali yangilaydi.
+    const generateRoutine = useCallback(async (goalId, { dailyHours } = {}) => {
+        const { data } = await goalApi.post(
+            `/goals/${goalId}/routine`,
+            { dailyHours },
+            { meta: { label: "AI kun tartibi", silent: true } }
+        );
+        return data.routines || [];
     }, []);
 
     const createGoal = async (payload) => {
@@ -138,6 +161,7 @@ export const GoalProvider = ({ children }) => {
                 ...state,
                 fetchGoals,
                 generateSteps,
+                generateRoutine,
                 createGoal,
                 updateGoal,
                 deleteGoal,

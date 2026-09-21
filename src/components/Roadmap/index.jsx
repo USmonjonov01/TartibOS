@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Plus, Milestone, Sparkles, X, Archive } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, Milestone, Archive } from "lucide-react";
 import { useGoals } from "../../context/goals";
 import StaircaseScene from "./StaircaseScene";
+import GoalWizard from "../GoalWizard";
+import { WideModalBox } from "../GoalWizard/style";
 import {
     Wrapper,
     HeaderRow,
@@ -20,18 +23,8 @@ import {
     ModalBox,
     ModalPad,
     ModalTitle,
-    FieldLabel,
-    TextInput,
     ModalActions,
     SecondaryButton,
-    PrimaryButton,
-    AiButton,
-    ErrorText,
-    GeneratedList,
-    GeneratedRow,
-    GeneratedRowText,
-    GeneratedRowStage,
-    RemoveStepBtn,
     ArchivedSection,
     ArchivedToggle,
     ArchivedList,
@@ -47,22 +40,16 @@ function Roadmap() {
     const {
         goals,
         fetchGoals,
-        createGoal,
         updateGoal,
         deleteGoal,
         addStep,
         updateStep,
         deleteStep,
         toggleStep,
-        generateSteps,
     } = useGoals();
+    const navigate = useNavigate();
     const [activeIndex, setActiveIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
-    const [newTitle, setNewTitle] = useState("");
-    const [generatedSteps, setGeneratedSteps] = useState(null); // null = hali generatsiya qilinmagan
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiError, setAiError] = useState(null);
-    const [submitting, setSubmitting] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
     const [confirmTarget, setConfirmTarget] = useState(null); // { type: 'goal'|'step', goal, step? }
 
@@ -80,46 +67,15 @@ function Roadmap() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeGoals.length, activeIndex]);
 
-    const openModal = () => {
-        setShowModal(true);
-        setNewTitle("");
-        setGeneratedSteps(null);
-        setAiError(null);
-    };
+    const openModal = () => setShowModal(true);
 
-    const handleGenerate = async () => {
-        const title = newTitle.trim();
-        if (!title) return;
-        setAiLoading(true);
-        setAiError(null);
-        try {
-            const steps = await generateSteps(title);
-            setGeneratedSteps(steps);
-        } catch {
-            setAiError(
-                "AI hozircha bosqich taklif qila olmadi. \"Bo'sh Goal\" sifatida yaratib, bosqichlarni o'zingiz qo'shishingiz mumkin."
-            );
-            setGeneratedSteps(null);
-        } finally {
-            setAiLoading(false);
-        }
-    };
-
-    const removeGeneratedStep = (index) => {
-        setGeneratedSteps((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    const handleCreateGoal = async () => {
-        const title = newTitle.trim();
-        if (!title) return;
-        setSubmitting(true);
-        try {
-            await createGoal({ title, steps: generatedSteps?.length ? generatedSteps : undefined });
-            setShowModal(false);
-            setActiveIndex(activeGoals.length); // yangi Goal oxirida qo'shiladi
-        } finally {
-            setSubmitting(false);
-        }
+    // Wizard tugaganda: yangi maqsadga o'tamiz; foydalanuvchi kun tartibini
+    // ko'rishni tanlagan bo'lsa (to), o'sha sahifaga yo'naltiramiz.
+    const handleWizardFinish = ({ goal, to }) => {
+        setShowModal(false);
+        const idx = activeGoals.findIndex((g) => g.id === goal?.id);
+        setActiveIndex(idx >= 0 ? idx : Math.max(0, activeGoals.length - 1));
+        if (to) navigate(to);
     };
 
     const goPrev = () => setActiveIndex((i) => Math.max(0, i - 1));
@@ -236,66 +192,13 @@ function Roadmap() {
 
             {showModal && (
                 <ModalOverlay onClick={() => setShowModal(false)}>
-                    <ModalBox onClick={(e) => e.stopPropagation()}>
-                        <ModalPad>
-                            <ModalTitle>Yangi maqsad</ModalTitle>
-
-                            <FieldLabel>Maqsad nomi</FieldLabel>
-                            <TextInput
-                                placeholder="Masalan: Gitara chalishni o'rganish"
-                                value={newTitle}
-                                onChange={(e) => {
-                                    setNewTitle(e.target.value);
-                                    setGeneratedSteps(null);
-                                    setAiError(null);
-                                }}
-                                autoFocus
-                            />
-
-                            {generatedSteps === null && (
-                                <AiButton type="button" disabled={!newTitle.trim() || aiLoading} onClick={handleGenerate}>
-                                    <Sparkles size={14} />
-                                    {aiLoading ? "Generatsiya qilinmoqda..." : "AI'dan bosqichlar taklif olish"}
-                                </AiButton>
-                            )}
-
-                            {aiError && <ErrorText>{aiError}</ErrorText>}
-
-                            {generatedSteps && generatedSteps.length > 0 && (
-                                <>
-                                    <FieldLabel style={{ marginTop: 16 }}>
-                                        Taklif qilingan bosqichlar — kerak bo'lmaganini olib tashlashingiz mumkin
-                                    </FieldLabel>
-                                    <GeneratedList>
-                                        {generatedSteps.map((s, i) => (
-                                            <GeneratedRow key={i}>
-                                                <GeneratedRowText>
-                                                    {s.title}
-                                                    {s.stageLabel && <GeneratedRowStage>{s.stageLabel}</GeneratedRowStage>}
-                                                </GeneratedRowText>
-                                                <RemoveStepBtn type="button" onClick={() => removeGeneratedStep(i)}>
-                                                    <X size={14} />
-                                                </RemoveStepBtn>
-                                            </GeneratedRow>
-                                        ))}
-                                    </GeneratedList>
-                                </>
-                            )}
-
-                            <ModalActions>
-                                <SecondaryButton type="button" onClick={() => setShowModal(false)}>
-                                    Bekor qilish
-                                </SecondaryButton>
-                                <PrimaryButton
-                                    type="button"
-                                    disabled={!newTitle.trim() || submitting || aiLoading}
-                                    onClick={handleCreateGoal}
-                                >
-                                    {generatedSteps?.length ? "Shu bosqichlar bilan yaratish" : "Bo'sh Goal yaratish"}
-                                </PrimaryButton>
-                            </ModalActions>
-                        </ModalPad>
-                    </ModalBox>
+                    <WideModalBox onClick={(e) => e.stopPropagation()}>
+                        <GoalWizard
+                            skipLabel="Bekor qilish"
+                            onSkip={() => setShowModal(false)}
+                            onFinish={handleWizardFinish}
+                        />
+                    </WideModalBox>
                 </ModalOverlay>
             )}
 

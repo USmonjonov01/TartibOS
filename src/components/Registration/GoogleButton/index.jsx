@@ -80,8 +80,8 @@ const GoogleButton = ({ label = "continue_with", onError }) => {
                 // AYNAN shu instansiyaga kelishini ta'minlaydi.
                 activeHandler = async (response) => {
                     try {
-                        await loginWithGoogleRef.current(response.credential);
-                        navigateRef.current("/dashboard");
+                        const loggedIn = await loginWithGoogleRef.current(response.credential);
+                        navigateRef.current(loggedIn?.isNewUser ? "/onboarding" : "/dashboard");
                     } catch (err) {
                         onErrorRef.current?.(err);
                     }
