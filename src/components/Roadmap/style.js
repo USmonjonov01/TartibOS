@@ -17,7 +17,7 @@ export const colors = {
 
 export const Wrapper = styled.div`
     padding: 32px 40px;
-    max-width: 1100px;
+    max-width: 1280px;
     margin: 0 auto;
     font-family: ${tokens.font.body};
 
@@ -75,13 +75,17 @@ export const EmptyState = styled.div`
     color: ${colors.textMuted};
 `;
 
-/* --- Carousel --- */
+/* --- Carousel ---
+   Bu "karta" endi shunchaki ma'lumot qutisi emas — foydalanuvchi o'z
+   o'sishini ko'radigan MUHIT. Shu sabab yumshoq "osmon" gradienti,
+   kattaroq radius va kengroq bo'shliq berilgan — zinapoya va
+   bosqichlar ro'yxati shu bitta uzluksiz sahna ichida yashaydi. */
 
 export const CarouselViewport = styled.div`
     overflow: hidden;
-    border-radius: ${tokens.radius.lg};
-    border: 1px solid ${colors.border};
-    background: ${colors.surface};
+    border-radius: ${tokens.radius.xl || "22px"};
+    border: 1px solid ${colors.borderSubtle};
+    background: linear-gradient(180deg, ${colors.primaryLight} 0%, ${colors.surface} 320px, ${colors.surface} 100%);
 `;
 
 export const CarouselTrack = styled.div`
@@ -93,7 +97,11 @@ export const CarouselTrack = styled.div`
 export const CarouselSlide = styled.div`
     flex: 0 0 100%;
     max-width: 100%;
-    padding: 28px 24px 20px;
+    padding: 36px 36px 28px;
+
+    @media (max-width: 640px) {
+        padding: 24px 18px 20px;
+    }
 `;
 
 export const CarouselNav = styled.div`
@@ -168,9 +176,40 @@ export const GoalMeta = styled.span`
 
 export const StaircaseSvgBox = styled.div`
     width: 100%;
-    aspect-ratio: 16 / 11;
-    max-height: 460px;
+    height: 460px;
     position: relative;
+    border-radius: ${tokens.radius.lg};
+    overflow: hidden;
+
+    @media (max-width: 640px) {
+        height: 340px;
+    }
+`;
+
+/* Zinapoyaning o'zi shu ichida gorizontal (kerak bo'lsa vertikal ham)
+   scroll qilinadi — pog'onalar soni ko'paysa ham hech biri kichraymaydi,
+   buning o'rniga sahna kengayadi va foydalanuvchi uni scroll qilib
+   ko'radi. CelebrateOverlay bundan tashqarida turadi (StaircaseSvgBox'ga
+   bevosita bog'langan), shuning uchun scroll paytida joyidan siljimaydi. */
+export const StaircaseScrollArea = styled.div`
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: ${colors.border} transparent;
+
+    &::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: ${colors.border};
+        border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
 `;
 
 /* --- Level badge + XP bar (o'yinsimon holat paneli) --- */
@@ -331,18 +370,34 @@ export const ConfettiPiece = styled.span`
 
 export const StepList = styled.ul`
     list-style: none;
-    margin: 20px 0 0;
-    padding: 0;
+    margin: 26px 0 0;
+    padding: 0 4px 0 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: ${colors.border} transparent;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: ${colors.border};
+        border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
 `;
 
 export const StepRow = styled.li`
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 15px 16px;
     border-radius: ${tokens.radius.md};
     background: ${(p) => (p.$next ? colors.primaryLight : p.$active ? colors.primaryLight : "transparent")};
     border: 1.5px solid ${(p) => (p.$next ? colors.primary : "transparent")};
@@ -373,6 +428,7 @@ export const StepCheck = styled.span`
     height: 24px;
     border-radius: 50%;
     flex: 0 0 24px;
+    margin-top: 1px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -382,7 +438,11 @@ export const StepCheck = styled.span`
 `;
 
 export const StepTitle = styled.span`
+    flex: 1 1 180px;
+    min-width: 0;
     font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
     font-weight: ${(p) => (p.$next ? 700 : 500)};
     color: ${(p) => (p.$done ? colors.textMuted : colors.text)};
     text-decoration: ${(p) => (p.$done ? "line-through" : "none")};

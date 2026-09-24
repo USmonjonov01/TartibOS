@@ -140,7 +140,18 @@ export const GoalProvider = ({ children }) => {
     // Goal'ning o'z Level'i va o'z unvoni bilan chiqadi, boshqa Goal'larga
     // taalluqli emas.
     const toggleStep = async (goalId, stepId) => {
-        const { data } = await goalApi.patch(`/goals/${goalId}/steps/${stepId}/toggle`);
+        // Server "bosqichlar ketma-ket bajarilishi kerak" kabi qoidani buzganda
+        // 409 qaytaradi — bu xabar goalApi'ga ulangan networkNotifier orqali
+        // allaqachon avtomatik toast sifatida ko'rsatiladi (src/axios/index.jsx).
+        // Bu yerda faqat local state'ni buzilishdan saqlaymiz va xatoni
+        // chaqiruvchiga (masalan optimistik UI kerak bo'lsa) uzatamiz.
+        let data;
+        try {
+            ({ data } = await goalApi.patch(`/goals/${goalId}/steps/${stepId}/toggle`));
+        } catch (err) {
+            return { error: true, status: err.response?.status };
+        }
+
         const updatedGoals = state.goals.map((g) =>
             g.id === goalId
                 ? { ...g, steps: g.steps.map((s) => (s.id === stepId ? data.step : s)) }

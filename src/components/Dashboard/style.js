@@ -202,6 +202,63 @@ export const StatPill = styled.div`
     }
 `;
 
+/* --- Level pill'i endi ko'p Goal bo'lsa ham HAMMASINI ko'rsatadi ---
+   Faqat "asosiy" Goal emas — har bir faol Goal o'z mini-kartasida, va bu
+   qator o'zi (ichkarida) yon tomonga scroll bo'ladi. Shu bilan boshqa ikki
+   pill (Streak, Missiya) joyidan siljimaydi, faqat Level qismi o'zi ichida
+   gorizontal scroll bo'ladi. Qirralardagi fade-mask "yana bor" degan
+   vizual signal beradi, scrollbar esa yashirilgan (lekin drag/touch/wheel
+   bilan scroll qilinaveradi). */
+export const LevelPillTrack = styled.div`
+    display: flex;
+    align-items: stretch;
+    gap: 5px;
+    max-width: 155px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+  
+
+    @media (max-width: 560px) {
+        max-width: 100%;
+        flex: 1 1 0;
+    }
+`;
+
+export const LevelPillCard = styled(StatPill)`
+    position: relative;
+    flex: 0 0 128px;
+    min-width: 150px;
+    scroll-snap-align: start;
+
+    @media (max-width: 560px) {
+        flex: 0 0 128px;
+    }
+`;
+
+/* Nechinchi Goal ekanligini bildiruvchi mikro-belgi (masalan "2/4") —
+   kartaning pastki-o'ng burchagida, faqat 1 tadan ortiq Goal bo'lsa
+   ko'rinadi. */
+export const LevelPillIndex = styled.span`
+    position: absolute;
+    bottom: -1px;
+    right: 6px;
+    font-size: 8.5px;
+    font-weight: 700;
+    font-family: ${tokens.font.mono};
+    color: ${colors.textSubtle};
+    background: ${tokens.colors.surface};
+    border: 1px solid ${colors.border};
+    border-radius: 7px;
+    padding: 0 4px;
+    line-height: 1.4;
+`;
+
 export const PillIconBox = styled.div`
     width: 32px;
     height: 32px;
