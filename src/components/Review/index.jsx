@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, RotateCcw, NotebookPen, CalendarDays, CalendarRange, Trash2 } from "lucide-react";
+import { CheckCircle2, RotateCcw, NotebookPen, CalendarDays, CalendarRange, Trash2, Sparkles } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
 import { useWeeks } from "../../context/weaks";
@@ -37,6 +37,13 @@ import {
     InsightList,
     InsightItem,
     InsightMarker,
+    AiConclusionBox,
+    AiConclusionHead,
+    AiConclusionLabel,
+    AiRefreshButton,
+    AiConclusionText,
+    AiConclusionEmpty,
+    AiConclusionError,
     ActionsRow,
     SaveButton,
     ClearButton,
@@ -105,7 +112,7 @@ const ReviewField = ({ label, placeholder, value, onChange, rows }) => (
 const Review = () => {
     const { user } = useUser();
     const { routines, fetchRoutines } = useRoutine();
-    const { weeks, fetchWeeks } = useWeeks();
+    const { weeks, fetchWeeks, generateWeeklyConclusion } = useWeeks();
 
     const [missions, setMissions] = useState([]);
     const fetchMissions = useCallback(async () => {
@@ -288,6 +295,29 @@ const Review = () => {
 
         return list;
     }, [currentPct, previousPct, weakestHabit, missionCurrent]);
+
+    // AI haftalik xulosasi — currentWeek.conclusion'da saqlanadi (server
+    // buni har Dushanba boshida avtomatik ham to'ldiradi). Bu yerdagi
+    // tugma foydalanuvchiga istalgan vaqt qayta so'rash/yaratish imkonini
+    // beradi (masalan hafta o'rtasida taraqqiyotni ko'rish uchun).
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState(null);
+
+    const handleGenerateAiConclusion = async () => {
+        setAiLoading(true);
+        setAiError(null);
+        try {
+            await generateWeeklyConclusion(currentWeekId);
+        } catch (err) {
+            setAiError(
+                err.response?.status === 404
+                    ? "Bu hafta uchun hali odat/missiya ma'lumoti yo'q — avval Dashboard'da bugungi holatingizni belgilang."
+                    : err.response?.data?.message || err.message || "AI xulosa yaratishda xatolik"
+            );
+        } finally {
+            setAiLoading(false);
+        }
+    };
 
     const saveReview = async () => {
         if (!user) return;
@@ -518,6 +548,37 @@ const Review = () => {
                                 </InsightList>
                             )}
                         </AutoInsightBox>
+
+                        <AiConclusionBox>
+                            <AiConclusionHead>
+                                <AiConclusionLabel>
+                                    <Sparkles size={13} /> AI haftalik xulosa
+                                </AiConclusionLabel>
+                                <AiRefreshButton type="button" onClick={handleGenerateAiConclusion} disabled={aiLoading}>
+                                    {aiLoading ? (
+                                        "Tahlil qilinmoqda..."
+                                    ) : currentWeek?.conclusion ? (
+                                        <>
+                                            <RotateCcw size={11} /> Qayta yaratish
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles size={11} /> Yaratish
+                                        </>
+                                    )}
+                                </AiRefreshButton>
+                            </AiConclusionHead>
+                            {aiError && <AiConclusionError>{aiError}</AiConclusionError>}
+                            {currentWeek?.conclusion ? (
+                                <AiConclusionText>{currentWeek.conclusion}</AiConclusionText>
+                            ) : (
+                                <AiConclusionEmpty>
+                                    Hali AI xulosa yo'q. "Yaratish" tugmasini bosing yoki hafta oxirigacha kuting —
+                                    har Dushanba boshida AI shu haftaning statistikasini o'zi tahlil qilib, avtomatik
+                                    xulosa yozadi.
+                                </AiConclusionEmpty>
+                            )}
+                        </AiConclusionBox>
 
                         <FieldStack>
                             <ReviewField

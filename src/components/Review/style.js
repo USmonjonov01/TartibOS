@@ -299,6 +299,85 @@ export const InsightMarker = styled.div`
     margin-top: 2px;
 `;
 
+/* ---------- AI haftalik xulosa ---------- */
+/* Rule-based "Avtomatik tahlil"dan (yuqorida) farqli — bu yerdagi matn
+   haqiqiy AI tomonidan, shu haftaning to'liq statistikasi (odatlar,
+   missiyalar, maqsad taraqqiyoti) asosida yoziladi. Server buni har hafta
+   Dushanba boshida avtomatik ham yaratadi — shu sabab bu quti ko'pincha
+   allaqachon to'ldirilgan holda ko'rinadi. */
+
+export const AiConclusionBox = styled.div`
+    background: linear-gradient(135deg, ${colors.amberSoft} 0%, ${colors.surfaceRaised} 65%);
+    border-radius: ${tokens.radius.md};
+    padding: 18px 20px;
+    border: 1px solid ${colors.amber}55;
+    margin-bottom: 20px;
+`;
+
+export const AiConclusionHead = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+`;
+
+export const AiConclusionLabel = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: ${font.mono};
+    font-size: 10.5px;
+    font-weight: 700;
+    color: ${colors.amberStrong || colors.amber};
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+`;
+
+export const AiRefreshButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid ${colors.amber}77;
+    border-radius: 8px;
+    color: ${colors.textPrimary};
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+        background: ${colors.amberSoft};
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
+`;
+
+export const AiConclusionText = styled.div`
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: ${colors.textSecondary};
+    white-space: pre-line;
+`;
+
+export const AiConclusionEmpty = styled.div`
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: ${colors.textMuted};
+`;
+
+export const AiConclusionError = styled.div`
+    font-size: 12px;
+    color: ${colors.danger};
+    margin-bottom: 10px;
+`;
+
 /* ---------- Actions ---------- */
 
 export const ActionsRow = styled.div`

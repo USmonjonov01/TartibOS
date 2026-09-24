@@ -64,8 +64,41 @@ export const WeeksProvider = ({ children }) => {
         [user, state.weeks]
     );
 
+    // Berilgan hafta uchun AI'dan haftalik xulosa so'raydi (server bu haftaning
+    // odat/missiya/maqsad statistikasini o'zi hisoblab, AI'ga yuboradi va
+    // natijani Week.conclusion'ga saqlaydi). "Sharh" sahifasidagi "AI bilan
+    // tahlil qilish" tugmasi shu funksiyani chaqiradi — bundan tashqari,
+    // backend har hafta oxirida (Dushanba 00:00, foydalanuvchi timezone'ida)
+    // buni AVTOMATIK ham bajaradi, shuning uchun ko'p hollarda foydalanuvchi
+    // sahifaga kirganda xulosa allaqachon tayyor turadi.
+    const generateWeeklyConclusion = useCallback(
+        async (weekId) => {
+            if (!user) throw new Error("Avval tizimga kiring");
+
+            const { data } = await routineApi.post(
+                `/weeks/${weekId}/conclusion`,
+                {},
+                { meta: { label: "Haftalik AI xulosa", silent: true } }
+            );
+
+            const updatedWeek = data.week || data;
+            const existingIndex = state.weeks.findIndex((w) => w.id === updatedWeek.id || w.weekId === updatedWeek.weekId);
+
+            let updatedList;
+            if (existingIndex >= 0) {
+                updatedList = state.weeks.map((w, idx) => (idx === existingIndex ? updatedWeek : w));
+            } else {
+                updatedList = [...state.weeks, updatedWeek];
+            }
+
+            dispatch({ type: "WEEKS_SUCCESS", payload: updatedList });
+            return { week: updatedWeek, ai: data.ai };
+        },
+        [user, state.weeks]
+    );
+
     return (
-        <WeeksContext.Provider value={{ ...state, fetchWeeks, saveDayCompletion }}>
+        <WeeksContext.Provider value={{ ...state, fetchWeeks, saveDayCompletion, generateWeeklyConclusion }}>
             {children}
         </WeeksContext.Provider>
     );
