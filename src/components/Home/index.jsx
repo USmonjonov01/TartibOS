@@ -118,7 +118,7 @@ import {
     AIStageItem,
 } from "./style";
 import TartibOSLogo from "../../assets/icons/TartibOS1.png"
-import DashboardPage from "../../assets/images/image.png"
+import DashboardPage from "../../assets/images/dashboardimage.png"
 
 
 const features = [

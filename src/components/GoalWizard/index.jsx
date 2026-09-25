@@ -13,6 +13,8 @@ import {
     Lead,
     Label,
     GoalInput,
+    DescriptionLabel,
+    DescriptionTextarea,
     ChipRow,
     Chip,
     Actions,
@@ -118,6 +120,7 @@ function GoalWizard({ onFinish, onSkip, skipLabel = "Keyinroq" }) {
 
     const [phase, setPhase] = useState("goal");
     const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
     const [steps, setSteps] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
     const [creating, setCreating] = useState(false);
@@ -127,13 +130,14 @@ function GoalWizard({ onFinish, onSkip, skipLabel = "Keyinroq" }) {
     const [routines, setRoutines] = useState([]);
 
     const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
 
     const handleGenerate = async () => {
         if (trimmedTitle.length < 2 || aiLoading) return;
         setAiLoading(true);
         setError(null);
         try {
-            const result = await generateSteps(trimmedTitle);
+            const result = await generateSteps(trimmedTitle, trimmedDescription || undefined);
             if (!result.length) throw new Error("empty");
             setSteps(result);
             setPhase("preview");
@@ -157,6 +161,7 @@ function GoalWizard({ onFinish, onSkip, skipLabel = "Keyinroq" }) {
         try {
             const created = await createGoal({
                 title: trimmedTitle,
+                description: trimmedDescription || undefined,
                 steps: empty ? undefined : steps,
             });
             setGoal(created);
@@ -228,6 +233,18 @@ function GoalWizard({ onFinish, onSkip, skipLabel = "Keyinroq" }) {
                                 }}
                                 onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                             />
+
+                            <DescriptionLabel htmlFor="goal-description">
+                                Qo'shimcha ma'lumot (ixtiyoriy) — hozirgi holatingiz qanday?
+                            </DescriptionLabel>
+                            <DescriptionTextarea
+                                id="goal-description"
+                                placeholder="Masalan: Hozir junior frontend developerman, React bilan ishlayman, backend'ni umuman bilmayman. Kuniga kechqurun 2 soat vaqtim bor."
+                                value={description}
+                                maxLength={600}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
+
                             <ChipRow>
                                 {GOAL_EXAMPLES.map((example) => (
                                     <Chip

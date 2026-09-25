@@ -58,10 +58,13 @@ export const GoalProvider = ({ children }) => {
     // Hech narsani saqlamaydi — faqat preview uchun. Xato bo'lsa (masalan API
     // kaliti sozlanmagan), Error tashlaydi — chaqiruvchi tomon "bo'sh, o'zim
     // qo'shaman"ga tushib qolishi kerak.
-    const generateSteps = useCallback(async (title) => {
+    // description — ixtiyoriy: foydalanuvchi o'z hozirgi holatini yozgan
+    // bo'lsa, AI shunga qarab boshlanish nuqtasini va bosqichlar chuqurligini
+    // moslaydi (masalan "hozir junior frontend developerman").
+    const generateSteps = useCallback(async (title, description) => {
         const { data } = await goalApi.post(
             "/goals/generate",
-            { title },
+            { title, description },
             { meta: { label: "AI yo'l xaritasi", silent: true } }
         );
         return data.steps || [];

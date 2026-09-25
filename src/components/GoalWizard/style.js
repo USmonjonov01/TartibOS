@@ -102,6 +102,44 @@ export const GoalInput = styled.input`
     }
 `;
 
+// Ixtiyoriy "qo'shimcha ma'lumot" maydoni — foydalanuvchi o'z hozirgi
+// holatini (masalan "hozir junior frontend developerman") yozib, AI'ga
+// aniqroq kontekst berishi uchun. GoalInput bilan bir xil ko'rinishda,
+// lekin balandroq va ko'p qatorli.
+export const DescriptionLabel = styled.label`
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: ${colors.textMuted};
+`;
+
+export const DescriptionTextarea = styled.textarea`
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 72px;
+    max-height: 180px;
+    border-radius: ${tokens.radius.md};
+    border: 1.5px solid ${colors.hairline};
+    background: ${colors.surface};
+    color: ${colors.textPrimary};
+
+    &::placeholder {
+        color: ${colors.textMuted};
+    }
+
+    &:focus {
+        outline: none;
+        border-color: ${colors.amber};
+    }
+`;
+
 export const ChipRow = styled.div`
     display: flex;
     flex-wrap: wrap;
