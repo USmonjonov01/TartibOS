@@ -520,6 +520,19 @@ export const RowMeta = styled.div`
     flex-shrink: 0;
 `;
 
+/* "Sababli bajarilmadi" holatida yozilgan izoh — yulduzchalar/ball turgan
+   joyda ko'rinadi. Uzun bo'lsa kesib, "..." bilan qisqartiramiz (to'liq matn
+   title atributida hover orqali ko'rinadi). */
+export const ExcusedNoteTag = styled.div`
+    max-width: 130px;
+    font-size: 11.5px;
+    color: ${colors.warning};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-style: italic;
+`;
+
 export const PriorityDot = styled.div`
     width: 6px;
     height: 6px;
@@ -702,6 +715,73 @@ export const ErrorBanner = styled.div`
     padding: 12px 16px;
     font-size: 13px;
     margin-bottom: 20px;
+`;
+
+/* Email tasdiqlanmagan foydalanuvchiga ko'rsatiladigan xabar — ErrorBanner
+   bilan bir xil "banner" naqshi, lekin xato emas, ogohlantirish rangida
+   (warning/amber) va X bilan yopish + tasdiqlash havolasi bilan birga. */
+export const VerifyBanner = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: ${colors.warningLight};
+    color: ${colors.warning};
+    border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+`;
+
+export const VerifyBannerText = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+`;
+
+export const VerifyBannerActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+`;
+
+export const VerifyBannerLink = styled.button`
+    background: none;
+    border: none;
+    padding: 0;
+    color: ${colors.warning};
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
+`;
+
+export const VerifyBannerClose = styled.button`
+    background: none;
+    border: none;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: ${colors.warning};
+    opacity: 0.7;
+    cursor: pointer;
+    border-radius: 6px;
+
+    &:hover {
+        opacity: 1;
+        background: color-mix(in srgb, var(--amber) 15%, transparent);
+    }
 `;
 
 /* ---------- Odat holati legendasi (History bilan bir xil uslub) ---------- */

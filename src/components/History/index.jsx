@@ -189,6 +189,20 @@ const History = () => {
         [selectedWeek]
     );
 
+    // "Sababli bajarilmadi" holatida yozilgan izoh — jadval katagi juda kichik
+    // bo'lgani uchun matnni to'g'ridan-to'g'ri ko'rsata olmaymiz, shuning uchun
+    // katak title (hover) ichiga qo'shamiz — avval bu izoh hech qayerda
+    // ko'rinmas edi.
+    const getCellNote = useCallback(
+        (dayKey, habit) => {
+            const key = habitKey(habit);
+            const entry = selectedWeek?.reasons?.[dayKey]?.[key];
+            const note = typeof entry === "object" ? entry?.note : null;
+            return note ? note.trim() : "";
+        },
+        [selectedWeek]
+    );
+
     const applyStateChange = useCallback(
         async ({ dayKey, habit, newState, note }) => {
             const key = habitKey(habit);
@@ -421,6 +435,7 @@ const History = () => {
                                                         const cellId = `${dayKey}:${habitKey(habit)}`;
                                                         const state = getCellState(dayKey, habit);
                                                         const dayPlan = habit.dayPlans?.[dayKey];
+                                                        const note = state === "excused" ? getCellNote(dayKey, habit) : "";
                                                         const baseHint = !editable
                                                             ? "Faqat joriy hafta tahrirlanadi"
                                                             : state === "done"
@@ -430,6 +445,10 @@ const History = () => {
                                                             : state === "excused"
                                                             ? "Bosing → Tozalash"
                                                             : "Bosing → Bajarildi";
+                                                        const titleParts = [];
+                                                        if (dayPlan) titleParts.push(dayPlan);
+                                                        if (note) titleParts.push(`Sabab: ${note}`);
+                                                        titleParts.push(baseHint);
                                                         return (
                                                             <Td key={dayKey}>
                                                                 <DayCellWrap>
@@ -439,7 +458,7 @@ const History = () => {
                                                                         $pending={pendingCell === cellId}
                                                                         disabled={!editable || pendingCell !== null}
                                                                         onClick={() => handleCellClick(dayKey, habit)}
-                                                                        title={dayPlan ? `${dayPlan}\n\n${baseHint}` : baseHint}
+                                                                        title={titleParts.join("\n\n")}
                                                                     >
                                                                         {stateIcon(state)}
                                                                     </DayCheckBtn>

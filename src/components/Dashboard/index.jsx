@@ -12,6 +12,8 @@ import {
     AlertTriangle,
     Flame,
     Star,
+    Mail,
+    X,
 } from "lucide-react";
 import { useUser } from "../../context/users";
 import { useRoutine } from "../../context/routine";
@@ -90,7 +92,13 @@ import {
     RatingStarBtn,
     RatingHint,
     ScoreStarsRow,
+    ExcusedNoteTag,
     InsightActionBtn,
+    VerifyBanner,
+    VerifyBannerText,
+    VerifyBannerActions,
+    VerifyBannerLink,
+    VerifyBannerClose,
     colors,
 } from "./style";
 import { tokens } from "../../theme/tokens";
@@ -123,10 +131,33 @@ const habitStateIcon = (state) => {
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const { user } = useUser();
+    const { user, resendVerification } = useUser();
     const { routines, loading: routineLoading, error: routineError, fetchRoutines } = useRoutine();
     const { weeks, loading: weeksLoading, error: weeksError, fetchWeeks, saveDayCompletion } = useWeeks();
     const { notifyMissionCompleted } = useNotifications();
+
+    // Email tasdiqlash bannerini X bilan yopish mumkin (shu sessiya uchun) —
+    // lekin sahifa qayta yuklanganda (yoki keyingi safar kirganda), agar
+    // email hali ham tasdiqlanmagan bo'lsa, banner yana ko'rinadi (foydalanuvchi
+    // buni butunlay unutib qo'ymasligi kerak). Muvaffaqiyat/xatolik xabari
+    // qo'lda emas — authApi'ning networkNotifier'i (meta.label orqali) buni
+    // avtomatik ko'rsatadi, boshqa forma (masalan ForgotPassword)lar bilan
+    // bir xil naqsh — ikkinchi marta qo'lda toast chiqarsak, ikkita xabar
+    // ustma-ust chiqib qolardi.
+    const [verifyBannerDismissed, setVerifyBannerDismissed] = useState(false);
+    const [resendingVerification, setResendingVerification] = useState(false);
+
+    const handleResendVerification = async () => {
+        if (resendingVerification) return;
+        setResendingVerification(true);
+        try {
+            await resendVerification();
+        } catch {
+            // xato allaqachon networkNotifier orqali toast qilib ko'rsatildi
+        } finally {
+            setResendingVerification(false);
+        }
+    };
 
     const [missions, setMissions] = useState([]);
     const [missionsLoading, setMissionsLoading] = useState(false);
@@ -257,6 +288,19 @@ const Dashboard = () => {
             const key = habitKey(habit);
             const score = currentWeek?.scores?.[todayKey]?.[key];
             return typeof score === "number" ? score : null;
+        },
+        [currentWeek, todayKey]
+    );
+
+    // "Sababli bajarilmadi" holatida foydalanuvchi yozgan izoh — avval bu
+    // hech qayerda ko'rsatilmas edi (faqat serverga saqlanib, "yo'qolib"
+    // qolardi). Endi yulduzchalar/ball turgan joyda ko'rinadi.
+    const getHabitNote = useCallback(
+        (habit) => {
+            const key = habitKey(habit);
+            const entry = currentWeek?.reasons?.[todayKey]?.[key];
+            const note = typeof entry === "object" ? entry?.note : null;
+            return note ? note.trim() : "";
         },
         [currentWeek, todayKey]
     );
@@ -540,7 +584,30 @@ const Dashboard = () => {
                     />
                 </HeaderBlock>
 
-
+                {user && !user.emailVerified && !verifyBannerDismissed && (
+                    <VerifyBanner>
+                        <VerifyBannerText>
+                            <Mail size={16} />
+                            Emailingiz hali tasdiqlanmagan. Ba'zi funksiyalar cheklangan bo'lishi mumkin.
+                        </VerifyBannerText>
+                        <VerifyBannerActions>
+                            <VerifyBannerLink
+                                type="button"
+                                onClick={handleResendVerification}
+                                disabled={resendingVerification}
+                            >
+                                {resendingVerification ? "Yuborilmoqda..." : "Tasdiqlash"}
+                            </VerifyBannerLink>
+                            <VerifyBannerClose
+                                type="button"
+                                aria-label="Yopish"
+                                onClick={() => setVerifyBannerDismissed(true)}
+                            >
+                                <X size={16} />
+                            </VerifyBannerClose>
+                        </VerifyBannerActions>
+                    </VerifyBanner>
+                )}
 
                 {anyError && (
                     <ErrorBanner>
@@ -663,6 +730,7 @@ const Dashboard = () => {
                                             todayHabits.map((habit) => {
                                                 const state = getHabitState(habit);
                                                 const score = getHabitScore(habit);
+                                                const note = state === "excused" ? getHabitNote(habit) : "";
                                                 const isPending = pendingHabitKey === habitKey(habit);
                                                 const todayPlan = habit.dayPlans?.[todayKey];
                                                 return (
@@ -694,6 +762,9 @@ const Dashboard = () => {
                                                                         />
                                                                     ))}
                                                                 </ScoreStarsRow>
+                                                            )}
+                                                            {state === "excused" && note && (
+                                                                <ExcusedNoteTag title={note}>{note}</ExcusedNoteTag>
                                                             )}
                                                             {habit.priority && <PriorityDot $color={priorityColor(habit.priority)} />}
                                                             <TimeTag>
