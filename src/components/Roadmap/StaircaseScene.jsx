@@ -67,14 +67,17 @@ const makeConfetti = () =>
 // ko'tariladi. Pog'onalar soni = shu Goal'dagi bosqichlar soni bo'yicha
 // dinamik hisoblanadi, shu sababli har bir Goal o'z zinapoyasiga ega bo'ladi.
 
-// Har bir pog'ona uchun O'ZGARMAS o'lcham — bosqichlar soni qancha ko'p
-// bo'lmasin (5 ta ham, 25 ta ham), bitta pog'ona hech qachon kichraymaydi.
-// Buning o'rniga butun sahna kengroq/balandroq bo'ladi, va uni gorizontal
-// scroll qilib ko'rish mumkin (StaircaseScrollArea'ga qarang). O'lchamlar
-// StaircaseSvgBox'ning katta (460px balandlik) sahnasiga mos — kichik
-// "widget" emas, haqiqiy o'sish landshafti hissini berish uchun.
-const STEP_WIDTH = 58; // bitta pog'onaning kengligi (gorizontal)
-const STEP_RISE = 28; // bitta pog'onaning balandligi (vertikal ko'tarilish)
+// Har bir pog'ona uchun MINIMAL o'lcham — bosqichlar ko'p bo'lganda (masalan
+// 17-20 ta) hech qachon shundan kichik bo'lmaydi, shu sababli siqilib
+// "hunuk" ko'rinmaydi (bunday holatda sahna kengroq/balandroq bo'ladi va
+// StaircaseScrollArea orqali scroll qilinadi). LEKIN bosqichlar kam bo'lsa
+// (masalan 4-6 ta), pog'onalar shu minimal o'lchamdan KATTAROQ chizilib,
+// mavjud bo'sh joyni (StaircaseSvgBox'ning butun kengligi/balandligini)
+// to'ldiradi — aks holda kichik zinapoya katta bo'sh quti ichida yo'qolib
+// qolardi. Haqiqiy render vaqtidagi qiymat pastda `stepWidth`/`stepRise`
+// (o'lchangan konteyner o'lchamiga qarab hisoblanadi).
+const MIN_STEP_WIDTH = 58; // bitta pog'onaning eng kichik kengligi (gorizontal)
+const MIN_STEP_RISE = 28; // bitta pog'onaning eng kichik balandligi (vertikal)
 const GAP = 5; // pog'onalar orasidagi tirqish
 const LEFT_X = 36;
 const TOP_PAD = 78; // eng baland pog'ona ustida bayroq/nom uchun joy
@@ -112,19 +115,44 @@ function StaircaseScene({
     const currentStage =
         [...steps].reverse().find((s) => s.completed)?.stageLabel || "Sayohat boshlandi";
 
-    // Pog'onalar geometriyasi — har bir pog'ona O'LCHAMI o'zgarmas
-    // (STEP_WIDTH/STEP_RISE), shu sababli hech qachon kichraymaydi/siqilib
-    // qolmaydi. Bosqichlar ko'p bo'lsa, buning o'rniga butun SVG kengroq va
-    // balandroq bo'ladi (svgWidth/svgHeight quyida), va tashqi konteyner
-    // uni scroll qilib ko'rsatadi.
+    // Ko'rinadigan konteyner (StaircaseScrollArea) haqiqiy piksel o'lchamini
+    // o'lchaymiz — shu orqali "bosqichlar kam bo'lsa, pog'onalarni bo'sh
+    // joyni to'ldiradigan qilib kattalashtirish" imkonini beradi.
+    const scrollAreaRef = useRef(null);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+        const el = scrollAreaRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+            const { width, height } = entry.contentRect;
+            setContainerSize((prev) =>
+                prev.width === width && prev.height === height ? prev : { width, height }
+            );
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    // Pog'onalar geometriyasi — har bir pog'onaning REAL o'lchami
+    // MIN_STEP_WIDTH/MIN_STEP_RISE dan HECH QACHON kichik bo'lmaydi (ko'p
+    // bosqichda scroll ishga tushadi), lekin bosqichlar kam bo'lsa,
+    // konteynerning bo'sh joyini to'ldirish uchun ulardan KATTAROQ bo'ladi.
     const stepCount = total > 0 ? total : 4; // bosqich yo'q bo'lsa — 4 ta "duxovka" pog'ona
-    const svgWidth = LEFT_X + stepCount * STEP_WIDTH + RIGHT_PAD;
-    const svgHeight = TOP_PAD + stepCount * STEP_RISE + BOTTOM_PAD;
+    const availableW = containerSize.width - LEFT_X - RIGHT_PAD;
+    const availableH = containerSize.height - TOP_PAD - BOTTOM_PAD;
+    const stepWidth = Math.max(MIN_STEP_WIDTH, availableW > 0 ? availableW / stepCount : 0);
+    const stepRise = Math.max(MIN_STEP_RISE, availableH > 0 ? availableH / stepCount : 0);
+
+    const svgWidth = LEFT_X + stepCount * stepWidth + RIGHT_PAD;
+    const svgHeight = TOP_PAD + stepCount * stepRise + BOTTOM_PAD;
     const GROUND_Y = svgHeight - BOTTOM_PAD;
 
-    const treadTopY = (i) => GROUND_Y - (i + 1) * STEP_RISE;
-    const treadX = (i) => LEFT_X + i * STEP_WIDTH;
-    const treadCenterX = (i) => treadX(i) + (STEP_WIDTH - GAP) / 2;
+    const treadTopY = (i) => GROUND_Y - (i + 1) * stepRise;
+    const treadX = (i) => LEFT_X + i * stepWidth;
+    const treadCenterX = (i) => treadX(i) + (stepWidth - GAP) / 2;
 
     // Bayroq — eng oxirgi (eng baland) pog'ona ustida, Goal nomi bilan.
     const flagX = total > 0 ? treadCenterX(total - 1) : treadCenterX(0);
@@ -317,7 +345,7 @@ function StaircaseScene({
                     ))}
                 </CelebrateOverlay>
 
-                <StaircaseScrollArea>
+                <StaircaseScrollArea ref={scrollAreaRef}>
                 <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}>
                     <defs>
                         <linearGradient id={`stepFillDone-${goal.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -364,7 +392,7 @@ function StaircaseScene({
                     <line
                         x1={LEFT_X - 16}
                         y1={GROUND_Y}
-                        x2={LEFT_X + stepCount * STEP_WIDTH + 16}
+                        x2={LEFT_X + stepCount * stepWidth + 16}
                         y2={GROUND_Y}
                         stroke={colors.border}
                         strokeWidth="1.5"
@@ -379,7 +407,7 @@ function StaircaseScene({
                                 key={i}
                                 x={treadX(i)}
                                 y={treadTopY(i)}
-                                width={STEP_WIDTH - GAP}
+                                width={stepWidth - GAP}
                                 height={GROUND_Y - treadTopY(i)}
                                 rx="3"
                                 fill="none"
@@ -393,7 +421,7 @@ function StaircaseScene({
                         steps.map((step, i) => {
                             const x = treadX(i);
                             const y = treadTopY(i);
-                            const w = STEP_WIDTH - GAP;
+                            const w = stepWidth - GAP;
                             const h = GROUND_Y - y;
                             const isNext = i === nextStepIndex;
                             const fill = step.completed
@@ -463,7 +491,7 @@ function StaircaseScene({
 
                     {/* Cho'qqidagi bayroq — Goal nomi (Font Awesome "flag-checkered" ikonkasi) */}
                     <g
-                        transform={`translate(${flagX + 120 * FLAG_SCALE}, ${flagTopY - 580 * FLAG_SCALE}) scale(${FLAG_SCALE})`}
+                        transform={`translate(${flagX - 128 * FLAG_SCALE}, ${flagTopY - 576 * FLAG_SCALE}) scale(${FLAG_SCALE})`}
                         filter={`url(#flagShadow-${goal.id})`}
                     >
                         <path
